@@ -5,3 +5,5 @@
 /mysite/.idea/
 /mysite/*.log
 .idea/
+__pycache__/
+*.py[cod]
