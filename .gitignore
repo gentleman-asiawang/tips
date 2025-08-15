@@ -1,0 +1,6 @@
+/frontend/dist/
+/frontend/node_modules/
+/mysite/temp/
+/mysite/dist/
+/mysite/.idea/
+/mysite/*.log
