@@ -51,8 +51,8 @@
         </p>
         <p class="p2">
           Wu W., Cui C., Zhu Y., Chen J., Wang Y., Liu Z., Gao H., Ou G.-Z., Liu C., Tao M., Chen Y., Pan R., Zhang G.,
-          Cai H., Yang J., Chen X., Zhou X., Wang S., & Shen X.-X. 2025. Structural genomics unveil hidden protein
-          functions across the insect tree of life.
+          Cai H., Yang J., Chen X., Zhou X., Wang S., & Shen X.-X. 2025. Exploring protein functions and remote homologs
+          across the insect tree of life with structural genomics.
         </p>
 
 
@@ -60,7 +60,7 @@
       <div class="text-container2">
         <p>
           Designed by <a href="https://shenxlab.com/" target="_blank" style="text-decoration: none;">The Shen Lab</a>,
-          Update March 2025.
+          Update August 2025.
         </p>
       </div>
 
