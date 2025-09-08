@@ -5,13 +5,11 @@ import { createHtmlPlugin } from 'vite-plugin-html';
 
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import compress from 'vite-plugin-compress'
 
 import Unocss from 'unocss/vite'
 import {
   presetAttributify,
   presetIcons,
-  presetUno,
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
@@ -63,7 +61,6 @@ export default defineConfig({
     // see unocss.config.ts for config
     Unocss({
       presets: [
-        presetUno(),
         presetAttributify(),
         presetIcons({
           scale: 1.2,
