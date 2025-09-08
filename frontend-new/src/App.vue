@@ -25,13 +25,13 @@ const handleWindowClose = () => {
   log.debug('Window is closing, sending UUID to server');
   const data = new FormData();
   data.append('uuid', uuidStore.uuid);  // Use FormData to build request data
-  navigator.sendBeacon('/maizevarmap_api/logout/', data);
+  navigator.sendBeacon('/tips_api/delete_all_temp_files/', data);
 };
 
 // sent uuid to server
 const sendUUIDToServer = async (uuid: string) => {
   try {
-    const response = await axios.post('/maizevarmap_api/login/', { uuid });
+    const response = await axios.post('/tips_api/get_uuid/', { uuid });
     log.debug('Server response:', response.data);
   } catch (error) {
     log.error('Failed to send UUID:', error);

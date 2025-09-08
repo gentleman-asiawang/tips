@@ -18,9 +18,9 @@ export default defineConfig({
   server: {
     hmr: true,
     proxy: {
-      '/maizevarmap_api': {
-        //target: 'http://127.0.0.1:8000',
-        target: 'http://172.31.2.238/',
+      '/tips_api': {
+        target: 'https://tips.shenxlab.com',
+        // target: 'http://172.31.2.238/',
         changeOrigin: true,
       },
     },
