@@ -66,42 +66,22 @@ onBeforeUnmount(() => {
       <el-header>
         <el-menu class="center-menu" :default-active="activeIndex" mode="horizontal" @select="handleSelect"
           popper-effect="light" :ellipsis="false" :router="true"
-          style="border: 0; top: 0; left: 0; width: 100%; z-index: 1000;">
-          <el-menu-item index="/"><font-awesome-icon icon="fa-solid fa-house" /><span
-              style="margin-left: 8px;">Home</span></el-menu-item>
+          style="border: 0; top: 0; left: 0; width: 100%; z-index: 1000; background-color: #ffffff; justify-content: center;">
+          <el-menu-item index="/"><span>Home</span></el-menu-item>
           <el-sub-menu index="/2">
             <template #title><span class="menu-item-text">Search</span></template>
-            <el-menu-item index="/vars_in_region">Search for Variations by Region</el-menu-item>
-            <el-menu-item index="/vars_in_gene">Search for Variations in Gene</el-menu-item>
-            <el-menu-item index="/vars_genotype">Search for Genotype With Variation ID</el-menu-item>
-            <el-menu-item index="/vars_info">Search for Variation Information with Variation ID</el-menu-item>
-            <el-menu-item index="/two_cultivars_compare">Search for Polymorphic Positions Between Two
-              Cultivars</el-menu-item>
+            <el-menu-item index="/bysequence">by sequence</el-menu-item>
+            <el-menu-item index="/bystructure">by structure</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="/3">
-            <template #title><span class="menu-item-text">Tools</span></template>
-            <el-menu-item index="/blastn">Blast</el-menu-item>
-            <el-menu-item index="/jbrowse">Jbrowse</el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="/document">
-            <template #title><span class="menu-item-text">Document</span></template>
-            <el-menu-item index="/accession_info">Accession Info</el-menu-item>
-            <el-menu-item index="/tutorial">Tutorial</el-menu-item>
-            <el-menu-item index="/develop_notes">Development Notes</el-menu-item>
-          </el-sub-menu>
-
-          <el-menu-item index="/about_contact">About & Contact</el-menu-item>
-
+          <el-menu-item index="/visualize" class="menu-item"><span
+              class="menu-item-text">Visualize</span></el-menu-item>
+          <el-menu-item index="/phylogeny" class="menu-item"><span
+              class="menu-item-text">Phylogeny</span></el-menu-item>
+          <el-menu-item index="/download" class="menu-item"><span class="menu-item-text">Download</span></el-menu-item>
+          <el-menu-item index="/about" class="menu-item"><span class="menu-item-text">About</span></el-menu-item>
         </el-menu>
-
-        <!-- <el-switch v-model="isDark" inline-prompt @change="toggleDark()" :active-action-icon="Moon" -->
-        <!-- :inactive-action-icon="Sunny" /> -->
       </el-header>
-      <el-main style="flex-grow: 1;">
-        <!-- 夜间模式切换 -->
-        <!-- <button @click="toggleDark()">
-          当前状态是: {{ isDark }}
-        </button> -->
+      <el-main style="flex-grow: 1;padding-top: 0;">
         <div class="container">
           <router-view v-slot="{ Component }">
             <keep-alive>
@@ -109,34 +89,47 @@ onBeforeUnmount(() => {
             </keep-alive>
           </router-view>
         </div>
-
       </el-main>
-      <el-footer style="flex-shrink: 0;">Henan Agricultural University</el-footer>
     </el-container>
-
-
   </div>
 </template>
 
 <style scoped>
-/* 调整 el-header 的样式，确保没有内边距或外边距影响布局 */
+/* Center the menu */
+.el-menu {
+  display: flex;
+  justify-content: center;
+  /* Centers the menu items */
+  gap: 0px;
+  /* Adds spacing between the menu items */
+}
+
+.el-menu-item {
+  padding: 0 15px;
+  /* Optional padding to make the menu items more spacious */
+}
+
+.menu-item-text {
+  font-size: 25px !important;
+  /* Ensure the text is the same size */
+  font-family: "Helvetica", Times, Sans-serif;
+  font-weight: bold;
+}
+
 .el-header {
   padding: 0;
   margin: 0;
 }
 
-/* 调整 el-menu 的样式，字体、粗细等 */
-.el-menu {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
 .el-menu>.el-menu-item,
 .el-menu>.el-sub-menu .menu-item-text {
-  font-size: 20px;
-  /* 设置你需要的字体大小 */
-  font-weight: bolder;
+  font-size: 25px;
+  font-family: "Helvetica", Times, Sans-serif;
+  font-weight: bold;
+}
+
+.el-menu--horizontal {
+  --el-menu-horizontal-height: 60px;
 }
 
 .el-menu--horizontal>.el-menu>.el-menu-item {
@@ -144,15 +137,10 @@ onBeforeUnmount(() => {
   font-weight: normal !important;
 }
 
-.el-footer {
-  background-color: #58aa81;
-  padding: 10px 0;
-}
-
 .container {
   justify-content: center;
   box-sizing: border-box;
-  max-width: 1300px;
+  max-width: 1000px;
   text-align: left;
   line-height: 1.4;
   padding-top: 0px;

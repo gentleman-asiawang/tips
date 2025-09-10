@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import mainpicUrl from "~/assets/index_tree_reduced_size.png"; // 确保图片在 `src/assets/`
+import mainpicUrl from "~/assets/index_tree_reduced_size.png"; // make sure picture in `src/assets/`
 </script>
 
 <style scoped>

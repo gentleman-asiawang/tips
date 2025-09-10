@@ -31,9 +31,8 @@ const route = useRoute();
 const isNotFound = computed(() => route.path === '/404');
 
 const handleWindowClose = () => {
-  // 使用 sendBeacon 发送删除文件请求,异步请求，没有返回值，不影响网页关闭
   const data = new FormData();
-  data.append('uuid', uuidStore.uuid);  // 使用 FormData 来构建请求数据
+  data.append('uuid', uuidStore.uuid);  //  Use FormData to build request data
   navigator.sendBeacon('/tips_api/delete_all_temp_files/', data);
 };
 
