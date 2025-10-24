@@ -3,12 +3,20 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import { createHtmlPlugin } from 'vite-plugin-html';
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    vueJsx()
+    vueJsx(),
+    createHtmlPlugin({
+      inject: {
+        data: {
+          version: new Date().getTime(), // 生成时间戳作为版本号
+        },
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -19,8 +27,8 @@ export default defineConfig({
     hmr: true,
     proxy: {
       '/tips_api': {
-        target: 'https://tips.shenxlab.com',
-        // target: 'http://172.31.2.238/',
+        // target: 'https://tips.shenxlab.com',
+        target: 'http://127.0.0.1:8000/',
         changeOrigin: true,
       },
     },

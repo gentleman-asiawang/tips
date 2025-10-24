@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useUuidStore } from '@/stores/uuid';
-import { useSamplesinfoStore, usePopulationsStore } from '@/stores/baseinfo';
+import { useInfoStore } from '@/stores/info';
 import axios from 'axios';
+import { ElMessage } from 'element-plus';
+
 import { getLogger } from '@/utils/logger';
 const log = getLogger('App.vue'); // 当前组件名
 log.setLevel('debug');
 
 const uuidStore = useUuidStore();
-const samplesinfoStore = useSamplesinfoStore()
-const populationsStore = usePopulationsStore();
+const infoStore = useInfoStore();
 const fullscreenLoading = ref(true);
 
 
@@ -31,7 +32,7 @@ const handleWindowClose = () => {
 // sent uuid to server
 const sendUUIDToServer = async (uuid: string) => {
   try {
-    const response = await axios.post('/tips_api/get_uuid/', { uuid });
+    const response = await axios.post('/tips_api/login/', { uuid });
     log.debug('Server response:', response.data);
   } catch (error) {
     log.error('Failed to send UUID:', error);
@@ -42,11 +43,21 @@ onMounted(async () => {
   try {
     window.addEventListener('beforeunload', handleWindowClose);
     uuidStore.generateUuid();
+    console.log(uuidStore.uuid)
     await sendUUIDToServer(uuidStore.uuid);
-    await samplesinfoStore.querySampleinfo(uuidStore.uuid);
-    await populationsStore.queryPopulationsInfo(uuidStore.uuid);
+    await infoStore.fetchOrders();
   } catch (error) {
-    log.error('Error loading orders:', error);
+    console.error('Error loading orders or sending UUID:', error);
+    ElMessage.error({
+      message: 'Can not connect server !!!',
+      duration: 0,
+      type: 'success',
+    })
+    ElMessage.error({
+      message: 'Please check your network or contact us',
+      duration: 0,
+      type: 'success',
+    })
   } finally {
     fullscreenLoading.value = false; // 设置加载状态为 false
   }
