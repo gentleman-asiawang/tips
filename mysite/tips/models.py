@@ -1,16 +1,6 @@
 from django.db import models
-import os
-from django.conf import settings
 
 # Create your models here.
-my_tree = None  # 在模块级别初始化
-
-def load_tree():
-    # 这里加载你的树，可能是从数据库或文件
-    from ete3 import Tree
-    global my_tree  # 使用全局变量存储树
-    file_path = os.path.join(settings.BASE_DIR, 'tips', 'data', 'tree.nwk')
-    my_tree = Tree(file_path)  # 假设你的树文件名为 tree.nwk
 
 class DataInfo(models.Model):
     tips_id = models.CharField(max_length=13, primary_key=True)
@@ -35,4 +25,32 @@ class FileInfo(models.Model):
         managed = False
         indexes = [
             models.Index(fields=['filename'], name='idx_filename'),  # 显式定义索引
+        ]
+
+class TreeInfo(models.Model):
+    tax_id = models.CharField(max_length=10, primary_key=True)
+    tip_name = models.CharField(max_length=60)
+    orders = models.CharField(max_length=20)
+    kingdom = models.CharField(max_length=20)
+    phylum = models.CharField(max_length=20)
+    subphylum = models.CharField(max_length=20)
+    class_name = models.CharField(max_length=20, db_column='class')
+    subclass = models.CharField(max_length=20)
+    infraclass = models.CharField(max_length=20)
+    cohort = models.CharField(max_length=20)
+    ncbi_order = models.CharField(max_length=20)
+    suborder = models.CharField(max_length=40)
+    infraorder = models.CharField(max_length=20)
+    superfamily = models.CharField(max_length=20)
+    family = models.CharField(max_length=40)
+    subfamily = models.CharField(max_length=20)
+    genus = models.CharField(max_length=20)
+    species = models.CharField(max_length=60)
+    class Meta:
+        db_table = 'tree_info'
+        managed = False
+        indexes = [
+            models.Index(fields=['tip_name'], name='idx_tip_name'),  # 显式定义索引
+            models.Index(fields=['orders'], name='idx_orders'),
+            models.Index(fields=['species'], name='idx_species'),
         ]

@@ -93,13 +93,11 @@ onBeforeUnmount(() => {
         </el-menu>
       </el-header>
       <el-main style="flex-grow: 1;padding-top: 0;">
-        <div class="container">
-          <router-view v-slot="{ Component }">
-            <keep-alive>
-              <component :is="Component" />
-            </keep-alive>
-          </router-view>
-        </div>
+        <router-view v-slot="{ Component }">
+          <keep-alive>
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
       </el-main>
     </el-container>
   </div>
@@ -151,7 +149,7 @@ onBeforeUnmount(() => {
 .container {
   justify-content: center;
   box-sizing: border-box;
-  max-width: 1000px;
+  max-width: 1300px;
   text-align: left;
   line-height: 1.4;
   padding-top: 0px;
