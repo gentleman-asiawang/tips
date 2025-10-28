@@ -47,7 +47,8 @@
     </div>
     <div style="margin-top: 5px;">
         <span>
-            The predicted local distance difference test (pLDDT), on a scale from 0 to 100, is a per-residue confidence score.
+            The predicted local distance difference test (pLDDT), on a scale from 0 to 100, is a per-residue confidence
+            score.
         </span>
     </div>
 </template>
@@ -58,6 +59,7 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router'
 import { useUuidStore } from '@/stores/uuid';
 import { ElMessage } from 'element-plus';
+import axios from 'axios';
 
 const router = useRouter()
 const uuidStore = useUuidStore();
@@ -67,7 +69,6 @@ const descriptionRef = ref<HTMLElement | null>(null);
 const isTruncated = ref(false);
 const checkTruncation = async () => {
     await nextTick(); // 确保 DOM 更新
-    console.log(descriptionRef.value)
     if (descriptionRef.value) {
         console.log('scrollWidth:', descriptionRef.value.scrollWidth);
         console.log('clientWidth:', descriptionRef.value.clientWidth);
@@ -115,17 +116,10 @@ const load3DStructure = () => {
 const out_data = ref()
 const querypyid = async () => {
     try {
-        let response
-        response = await fetch('/tips_api/query_by_id/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: props.target
-            }),
-        })
-        const data = await response.json()
-        out_data.value = data
-        console.log(data)
+        const response = await axios.get('/tips_api/query_by_id/', {
+            params: { id: props.target }
+        });
+        out_data.value = response.data;
         await nextTick();
         checkTruncation();
     } catch (error) {
@@ -151,22 +145,21 @@ function goBack() {
 
 // 下载pdb文件
 const loading_download = ref(false)
-const downloadpdb = async () => {
+const downloadpdb = async (tipsIds: string[], sequence = false) => {
     try {
         loading_download.value = true
-        const response = await fetch('/tips_api/download_data/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'uuid': uuidStore.uuid
-            },
-            body: JSON.stringify({ tips_id: [props.target], sequence: false }),
+        // 构建 GET 请求参数
+        // 数组参数使用重复参数形式 ?tips_id=1&tips_id=2
+        const params = new URLSearchParams();
+        tipsIds.forEach(id => params.append('tips_id', id));
+        params.append('sequence', sequence.toString());
+        const response = await axios.get('/tips_api/download_data/', {
+            params,
+            responseType: 'blob', // 告诉 Axios 返回二进制数据
+            headers: { uuid: uuidStore.uuid } // 如果你有 uuid 头
         });
-        if (!response.ok) {
-            loading_download.value = false
-            ElMessage.warning('Network response was not ok!');
-        }
-        const blob = await response.blob();
+        // 生成下载
+        const blob = new Blob([response.data], { type: 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
@@ -209,7 +202,7 @@ const downloadpdb = async () => {
 .legend {
     justify-content: center;
     margin-top: 8px;
-    display: flex; 
+    display: flex;
     align-items: center;
 }
 

@@ -102,6 +102,7 @@ import { useUuidStore } from '@/stores/uuid';
 import { useInfoStore } from '@/stores/info';
 import { Download, Search } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 const router = useRouter();
 const uuidStore = useUuidStore();
 const tableData = ref([])
@@ -139,31 +140,33 @@ const loading_download = ref(false)
 const downloadselect = async () => {
     try {
         loading_download.value = true
-        const response = await fetch('/tips_api/download_table/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'uuid': uuidStore.uuid
-            },
-            body: JSON.stringify({ download_type: 'foldseek' }),
-        });
-        if (!response.ok) {
-            loading_download.value = false
-            ElMessage.warning('Network response was not ok!');
-        }
-        const blob = await response.blob();
+        const response = await axios.post(
+            '/tips_api/download_table/',
+            { download_type: 'foldseek' },
+            {
+                headers: {
+                    'uuid': uuidStore.uuid
+                },
+                responseType: 'blob'
+            }
+        );
+        const blob = new Blob([response.data])
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         a.download = 'foldseekout.xlsx'; // 设置下载的文件名
-        loading_download.value = false
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+
+        // 清理 URL 和元素
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
     } catch (error) {
         ElMessage.error('Error downloading selected targets');
         console.error(error);
+    } finally {
+        loading_download.value = false
     }
 }
 
@@ -188,9 +191,9 @@ const submitFoldseek = async () => {
         loading_search.value = true
         outisnone.value = false
         const serverloadResponse = await fetch('/tips_api/get_server_load/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'uuid': uuidStore.uuid }
-            });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'uuid': uuidStore.uuid }
+        });
         // 处理获取服务器负载接口的结果
         if (serverloadResponse.ok) {
             const serverLoad = await serverloadResponse.json();

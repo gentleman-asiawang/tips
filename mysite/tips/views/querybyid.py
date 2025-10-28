@@ -1,31 +1,30 @@
-import json
+from tips.models import DataInfo
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
-from django.contrib.messages import debug
-from django.views import View
-from django.db import connection
-from django.http import JsonResponse, HttpResponse
+@api_view(['GET'])
+def query_by_id(request):
+    """
+    根据 tips_id 查询数据，GET 请求
+    请求参数：
+        /tips_api/query_by_id/?id=123
+    """
+    tips_id = request.query_params.get('id')  # GET 参数
+    if not tips_id:
+        return Response({'error': 'Missing id parameter.'}, status=status.HTTP_400_BAD_REQUEST)
 
-from tips.views.views import logger
+    try:
+        obj = DataInfo.objects.get(tips_id=tips_id)
+    except DataInfo.DoesNotExist:
+        return Response({'error': 'Tips ID not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+    if not obj.display:  # display 字段为空
+        return Response({'error': 'Tips ID not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-class QueryById(View):
-    @staticmethod
-    def post(request):
-        if request.headers.get('Content-Type') != 'application/json':
-            return HttpResponse('Request header error!', status=400)
-        data = json.loads(request.body)
-        tips_id = data.get('id')
-        with connection.cursor() as cursor:
-            query = "SELECT tips_id, species, description, display FROM data_info WHERE tips_id = %s"
-            cursor.execute(query, (tips_id,))
-            result = cursor.fetchone()
-
-        if not result or not result[3]:
-            return JsonResponse({'error': 'Tips ID not found.'}, status=404)
-        response_data = {
-            'pid': result[0],
-            'species': result[1],
-            'description': result[2]
-        }
-        return JsonResponse(response_data)
-
+    response_data = {
+        'pid': obj.tips_id,
+        'species': obj.species,
+        'description': obj.description
+    }
+    return Response(response_data)

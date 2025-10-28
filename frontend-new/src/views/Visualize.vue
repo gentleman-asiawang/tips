@@ -14,7 +14,8 @@
             <el-col :span="4"></el-col>
             <el-col :span="16" class="info-text">
                 <p>
-                    The protein ID can be found in the master table (List_of_proteinIDs_with_structures.tsv) on the download page.
+                    The protein ID can be found in the master table (List_of_proteinIDs_with_structures.tsv) on the
+                    download page.
                 </p>
             </el-col>
             <el-col :span="4"></el-col>
@@ -42,6 +43,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
+import axios from 'axios';
 const idinput = ref('')
 const loading = ref(false)
 const out_data = ref()
@@ -65,37 +67,30 @@ const submitid = async () => {
         return;
     }
     try {
-        let response
         loading.value = true
-        response = await fetch('/tips_api/query_by_id/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: idinput.value
-            }),
-        })
-        // 检查响应状态
-        if (!response.ok) {
-            // 根据响应状态码处理不同的情况
-            if (response.status === 404) {
-                const errorData = await response.json();
-                ElMessage.error(errorData.error || 'Tips ID not found.');
+        const response = await axios.get('/tips_api/query_by_id/', {
+            params: { id: idinput.value }
+        });
+        out_data.value = response.data;
+        handleTargetClick(response.data.pid, 'visualize');
+    } catch (error: any) {
+        if (error.response) {
+            // 后端返回非 2xx
+            if (error.response.status === 404) {
+                ElMessage.error(error.response.data.error || 'Tips ID not found.');
             } else {
-                ElMessage.error('Network response was not ok!');
+                ElMessage.error(`Request failed with status ${error.response.status}`);
             }
-            loading.value = false;
-            return;
+        } else if (error.request) {
+            // 请求已发出但没有收到响应
+            ElMessage.error('No response from server.');
+        } else {
+            // 其他错误
+            ElMessage.error(`Error: ${error.message}`);
         }
-        const data = await response.json()
-        out_data.value = data
-        loading.value = false
-        handleTargetClick(data.pid, 'visualize')
-        console.log(data)
-    } catch (error) {
-        ElMessage.error('Error occurred while fetching data.');
-        console.error('Error:', error)
+        console.error('Axios error:', error);
     } finally {
-        loading.value = false; // 确保加载状态在完成后按钮被释放
+        loading.value = false; // 无论成功还是失败都关闭加载状态
     }
 }
 </script>

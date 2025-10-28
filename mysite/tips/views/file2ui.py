@@ -8,61 +8,75 @@ import subprocess
 import pandas as pd
 from io import BytesIO
 from openpyxl import Workbook
-from django.views import View
 from django.conf import settings
-from django.db import connection
 from tips.views.my_module import UuidManager
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font, Alignment, Border, Side
-from django.http import FileResponse, JsonResponse, HttpResponse
+from django.http import FileResponse, HttpResponse
+from rest_framework.exceptions import ParseError
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from tips.models import DataInfo
 
 logger = logging.getLogger(__name__)
 
-class GetPDBFile(View):
-    @staticmethod
-    def get(request):
-        tipsid = request.GET.get('tipsid')
-        if not tipsid:
-            return JsonResponse({'error': 'pdb_file_name parameter is required'}, status=400)
-        with connection.cursor() as cursor:
-            query = "SELECT basename FROM data_info WHERE tips_id = %s"
-            cursor.execute(query, (tipsid,))
-            pdb_file_name = cursor.fetchone()[0]
-        logger.debug(pdb_file_name)
+class GetPDBFile(APIView):
+    """
+       根据 tips_id 返回 PDB 文件，ATOM 列小于 1 的值放大 100 倍。
+       GET 参数: tipsid
+    """
+    def get(self, request):
+        tips_id = request.GET.get('tipsid')
+        if not tips_id:
+            return Response({'error': 'tipsid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        pdb_file_name = DataInfo.objects.filter(tips_id=tips_id).values_list('basename', flat=True).first()
+        if not pdb_file_name:
+            return Response({'error': 'Tips ID not found.'}, status=status.HTTP_404_NOT_FOUND)
+
         match = re.match(r'^(.*?)_at_', pdb_file_name)
         if match:
             filename = match.group(1)
         else:
-            return JsonResponse({'error': 'Invalid basename format'}, status=400)
+            return Response({'error': 'Invalid basename format'}, status=status.HTTP_400_BAD_REQUEST)
         pdb_file_path = os.path.join('/data/Data/Structure', filename, pdb_file_name + ".pdb")  # 替换为实际路径
-        if os.path.exists(pdb_file_path):
-            modified_lines = []
-            with open(pdb_file_path,'r') as file:
-                for line in file:
-                    if line.startswith("ATOM"):
-                        columns = list(line)
+        if not os.path.exists(pdb_file_path):
+            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        modified_lines = []
+
+        with open(pdb_file_path,'r') as file:
+            for line in file:
+                if line.startswith("ATOM"):
+                    columns = list(line)
+                    try:
                         original_value = float(line[61:66].strip())
-                        if original_value < 1:
-                            modified_value = original_value * 100
-                            formatted_value = f"{modified_value:6.2f}"
-                            columns[61:66] = formatted_value[:8]
-                            modified_line = "".join(columns)
-                            modified_lines.append(modified_line)
-                        else:
-                            modified_lines.append(line)
+                    except ValueError:
+                        modified_lines.append(line)
+                        continue
+                    if original_value < 1:
+                        modified_value = original_value * 100
+                        formatted_value = f"{modified_value:6.2f}"
+                        columns[61:66] = formatted_value[:8]
+                        modified_line = "".join(columns)
+                        modified_lines.append(modified_line)
                     else:
                         modified_lines.append(line)
+                else:
+                    modified_lines.append(line)
+
+        return HttpResponse(modified_lines, content_type='chemical/x-pdb')
 
 
-
-            return HttpResponse(modified_lines, content_type='chemical/x-pdb')
-
-            #return FileResponse(open(pdb_file_path, 'rb'), content_type='chemical/x-pdb')
-        else:
-            return JsonResponse({'error': 'File not found'}, status=404)
-
-
-class DownloadTable(View):
+class DownloadTable(APIView):
+    """
+    根据 uuid 和 download_type 生成 Excel 文件下载
+    POST JSON body:
+    {
+        "download_type": "foldseek" 或 "mmseq2"
+    }
+    """
     @staticmethod
     def generate_excel_with_custom_dimensions(df):
         output = BytesIO()
@@ -88,9 +102,7 @@ class DownloadTable(View):
                     cell.alignment = alignment
                     cell.border = thin_border  # 去除默认边框
                 else:
-                    # 设置数据行的样式
                     cell.border = thin_border
-
                 cell.value = str(cell.value)
 
         # 设置列宽 (示例值，可以根据列名的宽度动态调整)
@@ -104,63 +116,68 @@ class DownloadTable(View):
         return output
 
     def post(self, request):
-        if request.headers.get('Content-Type') != 'application/json':
-            return JsonResponse({'error': 'Request header error!'}, status=400)
         uuid = request.headers.get('uuid')
-        if not uuid:
-            return JsonResponse({'error': 'uuid parameter is required'}, status=400)
+        if uuid is None:
+            return Response({'error': 'uuid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
         if uuid not in UuidManager.uuid_storage:
-            return JsonResponse({'error': 'uuid does not exist'}, status=404)
-        data = json.loads(request.body)
+            return Response({'error': 'uuid does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data
         download_type = data.get('download_type')
         if not download_type:
-            return JsonResponse({'error': 'download type parameter is required'}, status=400)
+            return Response({'error': 'download type parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
         if download_type not in ['foldseek', 'mmseq2']:
-            return JsonResponse({'error': 'download type error'}, status=400)
+            return Response({'error': 'download type error'}, status=status.HTTP_404_NOT_FOUND)
         download_type = f'reshape_{download_type}_tsv'
         outfile_path = UuidManager.get_files_for_uuid(uuid).get(download_type)
-
+        if not outfile_path or not os.path.exists(outfile_path):
+            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
 
         df = pd.read_csv(outfile_path, sep='\t')  # 使用制表符作为分隔符
 
         output = self.generate_excel_with_custom_dimensions(df)
 
-        if download_type == 'foldseek_tsv':
-            outfile_name = 'foldseekoutput.tsv'
-        else:
-            outfile_name = 'mmseq2.tsv'
+        outfile_name = 'foldseek.xlsx' if download_type == 'foldseek' else 'mmseq2.xlsx'
         logger.debug(f'Send {outfile_path} to ui')
-        return FileResponse(output, as_attachment=True, filename=outfile_name)
+        return FileResponse(output, as_attachment=True, filename=outfile_name, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
-class DownloadData(View):
+class DownloadData(APIView):
     def post(self, request):
-        if request.headers.get('Content-Type') != 'application/json':
-            return HttpResponse('Request header error!', status=400)
         uuid = request.headers.get('uuid')
-        data = json.loads(request.body)
+        if uuid is None:
+            return Response({'error': 'uuid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if uuid not in UuidManager.uuid_storage:
+            return Response({'error': 'uuid does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+
+        data = request.data
+        if not isinstance(data, dict):
+            # 如果不是字典，则说明 JSON 无效
+            raise ParseError('Invalid JSON body')
         tips_id = data.get('tips_id')
         down_seq = data.get('sequence', False)
-        if uuid is None:
-            return JsonResponse({'error': 'uuid parameter is required'}, status=400)
-        if uuid not in UuidManager.uuid_storage:
-            return JsonResponse({'error': 'uuid does not exist'}, status=404)
-        with connection.cursor() as cursor:
-            placeholders = ', '.join(['%s'] * len(tips_id))
-            logger.debug(f'placeholders: {placeholders}')
-            logger.debug(f'UUID: {uuid}')
-            logger.debug(f'tips_id: {tips_id}')
-            #query = f"SELECT basename FROM data_info WHERE tips_id = %s"
-            query = f"SELECT basename FROM data_info WHERE tips_id IN ({placeholders})"
-            cursor.execute(query, tips_id)
-            full_file_paths = [self.get_full_path(row[0]) for row in cursor.fetchall()]
-            logger.debug(f'full_file_paths:{full_file_paths}')
-        if down_seq:
-            seq_path = self.get_sequence(tips_id, uuid)
-        else:
-            seq_path = None
+        if not tips_id or not isinstance(tips_id, list):
+            return Response({'error': 'tips_id must be a non-empty list'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(full_file_paths) == 1:
+
+        if not tips_id:
+            return Response({'error': 'tips_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        data_infos = DataInfo.objects.filter(tips_id__in=tips_id)
+        if not data_infos.exists():
+            return Response({'error': 'No data found for given tips_id'}, status=status.HTTP_404_NOT_FOUND)
+
+        full_file_paths = [self.get_full_path(di.basename) for di in data_infos]
+
+        seq_path = None
+        if down_seq:
+            try:
+                seq_path = self.get_sequence(tips_id, uuid)
+            except subprocess.CalledProcessError as e:
+                return Response({'error': 'Blast command failed', 'details': e.stderr},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        if len(full_file_paths) == 1 and not seq_path:
             outpath = full_file_paths[0]
         else:
             outpath = self.create_zip(full_file_paths, seq_path, uuid)
@@ -169,6 +186,8 @@ class DownloadData(View):
 
     @staticmethod
     def create_zip(pdb_file_list, seq_path, uuid):
+        temp_dir = f'{settings.TEMP_DIR}/{uuid}'
+        os.makedirs(temp_dir, exist_ok=True)
         with tempfile.NamedTemporaryFile(delete=False, dir=f'{settings.TEMP_DIR}/{uuid}', suffix='.zip') as temp_zip_file:
             zip_file_path = temp_zip_file.name
             UuidManager.add_entry(uuid, 'zip', zip_file_path)
@@ -191,17 +210,13 @@ class DownloadData(View):
 
     @staticmethod
     def get_sequence(seq_list, uuid):
+        temp_dir = f'{settings.TEMP_DIR}/{uuid}'
+        os.makedirs(temp_dir, exist_ok=True)
         with tempfile.NamedTemporaryFile(delete=False, dir=f'{settings.TEMP_DIR}/{uuid}', suffix='.fasta') as temp_seq_file:
             temp_seq_file_path = temp_seq_file.name
             UuidManager.add_entry(uuid, 'fasta', temp_seq_file_path)
             list_input = ','.join(seq_list)
             blast_cmd = ['blastdbcmd', '-db', '/tips_db/blast_db/all_db/all', '-entry', list_input, '-dbtype', 'prot',
                          '-out', temp_seq_file_path]
-        try:
-            result = subprocess.run(blast_cmd, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as e:
-            error_output = e.stderr
-            return JsonResponse({'error': 'Blast command failed', 'details': error_output}, status=400)
-        if not result.returncode == 0:
-            return HttpResponse('blast command failed!')
+        subprocess.run(blast_cmd, capture_output=True, text=True, check=True)
         return temp_seq_file_path
