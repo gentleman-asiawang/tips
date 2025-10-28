@@ -67,7 +67,7 @@ const handelSucceed = () => {
 const initialFileList = [
   {
     name: '6RKF_A.pdb',
-    url: '/data/Data/Example/6RKF_A.pdb'
+    url: ''
   }
 ];
 const fileList = ref<UploadUserFile[]>([])

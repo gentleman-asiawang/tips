@@ -187,51 +187,39 @@ const submitFoldseek = async () => {
         return;
     }
     tableData.value = []
+    loading_search.value = true
+    outisnone.value = false
     try {
-        loading_search.value = true
-        outisnone.value = false
-        const serverloadResponse = await fetch('/tips_api/get_server_load/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'uuid': uuidStore.uuid }
+        
+        
+        const serverLoadResponse = await axios.get('/tips_api/get_server_load/', {
+            headers: { 'uuid': uuidStore.uuid },
         });
-        // 处理获取服务器负载接口的结果
-        if (serverloadResponse.ok) {
-            const serverLoad = await serverloadResponse.json();
-            if (serverLoad.serverload === 'high') {
-                ElMessage.error('Current server load: high');
-            } else if (serverLoad.serverload === 'medium') {
-                ElMessage.warning('Current server load: medium');
-            } else {
-                ElMessage.success('Current server load: low');
-            }
+        const serverLoad = serverLoadResponse.data
+        if (serverLoad.serverload === 'high') {
+            ElMessage.error('Current server load: high')
+        } else if (serverLoad.serverload === 'medium') {
+            ElMessage.warning('Current server load: medium')
         } else {
-            console.warn('Pre-processing interface failed or encountered an error.');
+            ElMessage.success('Current server load: low')
         }
-        const startTime = Date.now();
-
 
         // 第二个请求：查询蛋白序列
-        let sample
-        if (currentfile === 2) {
-            sample = true
-        } else {
-            sample = false
-        }
-
-        const mainResponse = await fetch('/tips_api/query_by_pdb/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'uuid': uuidStore.uuid },
-            body: JSON.stringify({ foldseek_db: foldseek_db_select.value, sample: sample }),
-        })
-        if (!mainResponse.ok) {
-            loading_search.value = false;
-            ElMessage.error('Please check your input data!');
-            return;
-        }
-        const data = await mainResponse.json()
+        const startTime = Date.now();
+        const sample = currentfile === 2;
+        const mainResponse = await axios.post(
+            '/tips_api/query_by_pdb/',
+            {
+                sample: sample,
+                foldseek_db: foldseek_db_select.value,
+            },
+            {
+                headers: { 'uuid': uuidStore.uuid }
+            }
+        );
+        const data = mainResponse.data
         tableData.value = data || []
         currentPage.value = 1
-        loading_search.value = false
         const endTime = Date.now();
         elapsedTime.value = endTime - startTime;
         if (tableData.value.length === 0) {
@@ -241,6 +229,9 @@ const submitFoldseek = async () => {
         console.log(elapsedTime)
     } catch (error) {
         console.error('Error:', error)
+        ElMessage.error('An error occurred while processing your request.')
+    } finally {
+        loading_search.value = false
     }
 }
 
