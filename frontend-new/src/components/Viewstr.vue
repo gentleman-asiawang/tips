@@ -114,7 +114,7 @@ const load3DStructure = () => {
 
 // 从数据库查询信息
 const out_data = ref()
-const querypyid = async () => {
+const querybyid = async () => {
     try {
         const response = await axios.get('/tips_api/query_by_id/', {
             params: { id: props.target }
@@ -130,11 +130,11 @@ const querypyid = async () => {
 // 监听 target 的变化来重新加载数据
 watch(() => props.target, () => {
     load3DStructure();    // 加载新的 3D 数据
-    querypyid();
+    querybyid();
 });
 onMounted(() => {
     load3DStructure();
-    querypyid();
+    querybyid();
 })
 
 // 返回按钮
@@ -145,19 +145,24 @@ function goBack() {
 
 // 下载pdb文件
 const loading_download = ref(false)
-const downloadpdb = async (tipsIds: string[], sequence = false) => {
+const downloadpdb = async () => {
     try {
         loading_download.value = true
         // 构建 GET 请求参数
-        // 数组参数使用重复参数形式 ?tips_id=1&tips_id=2
-        const params = new URLSearchParams();
-        tipsIds.forEach(id => params.append('tips_id', id));
-        params.append('sequence', sequence.toString());
-        const response = await axios.get('/tips_api/download_data/', {
-            params,
-            responseType: 'blob', // 告诉 Axios 返回二进制数据
-            headers: { uuid: uuidStore.uuid } // 如果你有 uuid 头
-        });
+        const tipsIds = Array.isArray(props.target) ? props.target : [props.target];
+        const response = await axios.post(
+            '/tips_api/download_data/',
+            {
+                tips_id: tipsIds,
+                sequence: false
+            },
+            {
+                headers: {
+                    uuid: uuidStore.uuid
+                },
+                responseType: 'blob'
+            }
+        );
         // 生成下载
         const blob = new Blob([response.data], { type: 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
@@ -165,13 +170,14 @@ const downloadpdb = async (tipsIds: string[], sequence = false) => {
         a.style.display = 'none';
         a.href = url;
         a.download = `${props.target}.pdb`; // 设置下载的文件名
-        loading_download.value = false
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
     } catch (error) {
         ElMessage.error('Error downloading selected targets');
         console.error(error);
+    } finally {
+        loading_download.value = false
     }
 }
 </script>

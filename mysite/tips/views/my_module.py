@@ -1,10 +1,12 @@
 import os
 import shutil
+import logging
 import csv
 import tempfile
 from django.conf import settings
 from django.db import connection
-from tips.views.views import logger
+
+logger = logging.getLogger(__name__)
 
 class UuidManager:
     uuid_storage = {}

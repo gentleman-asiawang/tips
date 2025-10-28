@@ -68,7 +68,8 @@
       <h2 class="dot-heading">Full Dataset</h2>
       <p class="info-text">
         The full dataset of all predicted structures and phylogenomic matrix are available at <el-link
-          style="font-size: 22px;" type="primary" href="https://figshare.com/s/7b51b2fa347954a02bc4" target="_">Figshare+</el-link>.
+          style="font-size: 22px;" type="primary" href="https://figshare.com/s/7b51b2fa347954a02bc4"
+          target="_">Figshare+</el-link>.
       </p>
       <el-divider />
       <h1>License</h1>
@@ -86,6 +87,7 @@ import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Search, Download } from '@element-plus/icons-vue';
 import { useUuidStore } from '@/stores/uuid';
+import axios from 'axios';
 const uuidStore = useUuidStore();
 
 const loading_table = ref(true)
@@ -100,30 +102,32 @@ const downloadSelect = async () => {
   }
   const tipsIdList = idinput.value.split('\n').map(line => line.trim()).filter(line => line !== '');
   try {
-    let response
     loading.value = true
-    response = await fetch('/tips_api/download_data/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'uuid': uuidStore.uuid },
-      body: JSON.stringify({
-        tips_id: tipsIdList
-      }),
-    })
-    if (!response.ok) {
-      loading.value = false
-      ElMessage.warning('Network response was not ok!');
-    }
-    const blob = await response.blob();
+    const response = await axios.post(
+      '/tips_api/download_data/',
+      {
+        tips_id: tipsIdList,
+        sequence: false
+      },
+      {
+        headers: {
+          uuid: uuidStore.uuid
+        },
+        responseType: 'blob'
+      }
+    );
+    const blob = new Blob([response.data], { type: 'application/octet-stream' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
     a.download = 'select.zip'; // 设置下载的文件名
-    loading.value = false
     document.body.appendChild(a);
     a.click();
   } catch (error) {
     console.error('Error:', error)
+  } finally {
+    loading.value = false
   }
 }
 

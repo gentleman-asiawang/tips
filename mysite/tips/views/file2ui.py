@@ -16,7 +16,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from tips.models import DataInfo
-from tips.views.views import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class GetPDBFile(APIView):
@@ -25,7 +27,13 @@ class GetPDBFile(APIView):
        GET 参数: tipsid
     """
     def get(self, request):
-        tips_id = request.GET.get('tipsid')
+        uuid = request.headers.get('uuid')
+        if not uuid:
+            return Response({'error': 'uuid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if uuid not in UuidManager.uuid_storage:
+            return Response({'error': 'uuid does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        tips_id = request.data.get('tipsid')
         if not tips_id:
             return Response({'error': 'tipsid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 

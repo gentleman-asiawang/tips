@@ -2,6 +2,9 @@ from tips.models import DataInfo
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+import logging
+
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def query_by_id(request):

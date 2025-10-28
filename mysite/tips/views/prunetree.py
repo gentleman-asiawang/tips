@@ -3,8 +3,9 @@ from tips.models import TreeInfo
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+import logging
 
-from tips.views.views import logger
+logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])

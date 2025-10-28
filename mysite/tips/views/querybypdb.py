@@ -3,8 +3,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tips.views.my_module import UuidManager, FileReshape, logger
+from tips.views.my_module import UuidManager, FileReshape
 import os, subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class QueryByPDB(APIView):

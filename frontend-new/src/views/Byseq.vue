@@ -144,6 +144,7 @@ const mmseqs_db_select = ref<string>("All");
 const loading_download = ref(false)
 const downloadselect = async () => {
     try {
+        console.log("✅ downloadselect triggered");
         loading_download.value = true
         const response = await axios.post(
             '/tips_api/download_table/',
