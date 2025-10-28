@@ -9,7 +9,7 @@
         <el-table-column prop="size" label="Size" />
         <el-table-column label="" min-width="10px">
           <template v-slot="{ row }">
-            <a :href="`https://tips.shenxlab.com/tips_data/alldata/${row.name}`" download>
+            <a :href="`https://tips.shenxlab.com/tips_data/${row.name}`" download>
               <el-icon>
                 <Download color="#409EFF" />
               </el-icon>
@@ -54,7 +54,7 @@
           <el-table-column prop="md5" label="MD5" min-width="70px" />
           <el-table-column label="" min-width="10px">
             <template v-slot="{ row }">
-              <a :href="`https://tips.shenxlab.com/tips_data/species/${row.filename}`" download>
+              <a :href="`https://tips.shenxlab.com/tips_data/structure/${row.filename}`" download>
                 <el-icon>
                   <Download color="#409EFF" />
                 </el-icon>
@@ -71,6 +71,25 @@
           style="font-size: 22px;" type="primary" href="https://figshare.com/s/7b51b2fa347954a02bc4"
           target="_">Figshare+</el-link>.
       </p>
+      <h2 class="dot-heading">Full DataBase</h2>
+      <p class="info-text">
+        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      </p>
+      <el-table :data="fulldatabase" stripe style="width: 100%" :header-cell-style="{ backgroundColor: '#EBEDF0' }">
+        <el-table-column prop="name" label="Filename" />
+        <el-table-column prop="date" label="Uploaded" min-width="50px"/>
+        <el-table-column prop="size" label="Size" min-width="30px"/>
+        <el-table-column prop="md5" label="MD5" min-width="90px" />
+        <el-table-column label="" min-width="10px">
+          <template v-slot="{ row }">
+            <a :href="`https://tips.shenxlab.com/tips_data/pdb_and_swissprot_database.tar.xz`" download>
+              <el-icon>
+                <Download color="#409EFF" />
+              </el-icon>
+            </a>
+          </template>
+        </el-table-column>
+      </el-table>
       <el-divider />
       <h1>License</h1>
       <p class="info-text">
@@ -153,6 +172,15 @@ const allData = [
     date: '2024-10-30',
     size: '282 KB',
   },
+]
+
+const fulldatabase = [
+  {
+    name: 'pdb_and_swissprot_database.tar.xz',
+    date: '2025-10-29',
+    size: '1.3 GB',
+    md5: '10ac65eb6c9ad56ba72b0233b959e820'
+  }
 ]
 
 // 转换文件大小为 MB

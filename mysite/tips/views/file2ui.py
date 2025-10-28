@@ -27,13 +27,7 @@ class GetPDBFile(APIView):
        GET 参数: tipsid
     """
     def get(self, request):
-        uuid = request.headers.get('uuid')
-        if not uuid:
-            return Response({'error': 'uuid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
-        if uuid not in UuidManager.uuid_storage:
-            return Response({'error': 'uuid does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-        tips_id = request.data.get('tipsid')
+        tips_id = request.query_params.get('tipsid')
         if not tips_id:
             return Response({'error': 'tipsid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 

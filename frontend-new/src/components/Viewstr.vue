@@ -1,7 +1,7 @@
 <template>
     <el-page-header v-on:back="goBack" style="margin-bottom: 5px;margin-left: 10px;margin-right: 10px;">
         <template #content>
-            <div v-if="out_data" class="flex items-center">
+            <div v-if="out_data" class="flex items-center flex-no-wrap">
                 <span class="header-text"><b>PID:</b> {{ out_data.pid }}</span>
                 <el-divider direction="vertical" border-style="dashed" style="margin: 0 6px;" />
                 <span class="header-text"><b>Species:</b> {{ out_data.species }}</span>
@@ -197,7 +197,7 @@ const downloadpdb = async () => {
 
 .description {
     display: block;
-    max-width: 800px;
+    max-width: 100%;
     /* 设置最大宽度 */
     overflow: hidden;
     /* 超出隐藏 */
@@ -215,5 +215,11 @@ const downloadpdb = async () => {
 .legend-item {
     display: flex;
     margin-right: 30px;
+}
+
+.flex-no-wrap {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
 }
 </style>
