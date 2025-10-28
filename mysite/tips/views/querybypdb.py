@@ -1,13 +1,10 @@
-import json
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tips.views.my_module import UuidManager, FileReshape, logger
-import os, subprocess, logging
-logger = logging.getLogger(__name__)
+import os, subprocess
 
 
 class QueryByPDB(APIView):
@@ -31,11 +28,12 @@ class QueryByPDB(APIView):
         data = request.data
         foldseek_db = data.get('foldseek_db')
         sample = data.get('sample', False)
+        logger.debug(f'sample: {sample}')
 
         temp_pdb_path = UuidManager.get_files_for_uuid(uuid).get('pdb')
         if not sample:
             if not os.path.exists(temp_pdb_path):
-                return JsonResponse({'error': 'PDB file not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'PDB file not found'}, status=status.HTTP_404_NOT_FOUND)
 
         if foldseek_db == "All":
             foldseek_db_path = f'/tips_db/foldseek_db/All_70pLDDT_db/all_70pLDDT'

@@ -1,11 +1,9 @@
 from tips.models import DataInfo, FileInfo
 from tips.views.my_module import UuidManager
-
 import tempfile
 import psutil
 from django.conf import settings
 from django.db import connection
-from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -145,4 +143,4 @@ def get_file_info(request):
     with connection.cursor() as cursor:
         # 查询所有目
         file_info_list = list(FileInfo.objects.values())
-    return JsonResponse(file_info_list, safe=False, status=200)
+    return Response(file_info_list)

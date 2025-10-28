@@ -9,7 +9,7 @@ from rest_framework import status
 
 from django.conf import settings
 from tips.views.my_module import UuidManager, FileReshape
-logger = logging.getLogger(__name__)
+from tips.views.views import logger
 
 
 @api_view(['POST'])

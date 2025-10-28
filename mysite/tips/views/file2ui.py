@@ -1,7 +1,5 @@
 import os
 import re
-import json
-import logging
 import zipfile
 import tempfile
 import subprocess
@@ -18,8 +16,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from tips.models import DataInfo
+from tips.views.views import logger
 
-logger = logging.getLogger(__name__)
 
 class GetPDBFile(APIView):
     """
