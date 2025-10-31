@@ -70,8 +70,6 @@ const isTruncated = ref(false);
 const checkTruncation = async () => {
     await nextTick(); // 确保 DOM 更新
     if (descriptionRef.value) {
-        console.log('scrollWidth:', descriptionRef.value.scrollWidth);
-        console.log('clientWidth:', descriptionRef.value.clientWidth);
         isTruncated.value = descriptionRef.value.scrollWidth > descriptionRef.value.clientWidth;
     }
 };

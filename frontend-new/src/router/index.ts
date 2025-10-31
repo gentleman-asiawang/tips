@@ -79,11 +79,8 @@ router.beforeEach((to, from, next) => {
   if (to.path === '/') {
     next(); // 继续访问根路径
   } else {
-    console.log('not to root')
-    console.log(from.name)
     // 如果不是根路径且用户在刷新，重定向到根路径
     if (from.name === undefined) { // from.name 为 null 表示用户是从浏览器刷新进来的
-      console.log('web fresh')
       next('/'); // 跳转到根路径
     } else {
       next(); // 继续访问其他页面

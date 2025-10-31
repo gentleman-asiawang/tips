@@ -103,6 +103,10 @@ import { useInfoStore } from '@/stores/info';
 import { Download, Search } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { getLogger } from '@/utils/logger';
+const log = getLogger('Bystr.vue'); // 当前组件名
+log.setLevel('info');
+
 const router = useRouter();
 const uuidStore = useUuidStore();
 const tableData = ref([])
@@ -124,7 +128,6 @@ const useSample = () => {
 // 展示蛋白
 const handleTargetClick = (target: string, source: string) => {
     router.push({ name: 'Viewstr', params: { target, source } });
-    console.log(target)
 };
 
 // 选择数据库
@@ -190,8 +193,6 @@ const submitFoldseek = async () => {
     loading_search.value = true
     outisnone.value = false
     try {
-        
-        
         const serverLoadResponse = await axios.get('/tips_api/get_server_load/', {
             headers: { 'uuid': uuidStore.uuid },
         });
@@ -226,7 +227,7 @@ const submitFoldseek = async () => {
             outisnone.value = true
             ElMessage.warning('No matching data found!');
         }
-        console.log(elapsedTime)
+        log.debug(elapsedTime)
     } catch (error) {
         console.error('Error:', error)
         ElMessage.error('An error occurred while processing your request.')

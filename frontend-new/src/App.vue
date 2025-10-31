@@ -7,7 +7,7 @@ import { ElMessage } from 'element-plus';
 
 import { getLogger } from '@/utils/logger';
 const log = getLogger('App.vue'); // 当前组件名
-log.setLevel('debug');
+log.setLevel('info');
 
 const uuidStore = useUuidStore();
 const infoStore = useInfoStore();
@@ -43,7 +43,6 @@ onMounted(async () => {
   try {
     window.addEventListener('beforeunload', handleWindowClose);
     uuidStore.generateUuid();
-    console.log(uuidStore.uuid)
     await sendUUIDToServer(uuidStore.uuid);
     await infoStore.fetchOrders();
   } catch (error) {

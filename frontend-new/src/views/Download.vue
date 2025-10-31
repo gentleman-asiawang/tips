@@ -18,7 +18,7 @@
         </el-table-column>
       </el-table>
       <el-divider />
-      <h1>Download Structures</h1>
+      <h1>Download Structure</h1>
       <h2 class="dot-heading">By Protein IDs</h2>
       <p class="info-text">
         Given a list of protein IDs, you can batch download the corresponding structures. Note that maximum number of
@@ -71,14 +71,19 @@
           style="font-size: 22px;" type="primary" href="https://figshare.com/s/7b51b2fa347954a02bc4"
           target="_">Figshare+</el-link>.
       </p>
-      <h2 class="dot-heading">Full DataBase</h2>
+      <h1>Download Database</h1>
       <p class="info-text">
-        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        Database of protein structures with well-known functions.
+        <el-tooltip content="<span>The CATH SSG5 database can be obtained from <a style='text-decoration: none;color: #409EFF;' href='https://www.science.org/doi/10.1126/science.adq4946' target='_'>this study</a></span>" raw-content placement="top">
+          <el-icon color="#409EFF">
+            <InfoFilled />
+          </el-icon>
+        </el-tooltip>
       </p>
       <el-table :data="fulldatabase" stripe style="width: 100%" :header-cell-style="{ backgroundColor: '#EBEDF0' }">
         <el-table-column prop="name" label="Filename" />
-        <el-table-column prop="date" label="Uploaded" min-width="50px"/>
-        <el-table-column prop="size" label="Size" min-width="30px"/>
+        <el-table-column prop="date" label="Uploaded" min-width="50px" />
+        <el-table-column prop="size" label="Size" min-width="30px" />
         <el-table-column prop="md5" label="MD5" min-width="90px" />
         <el-table-column label="" min-width="10px">
           <template v-slot="{ row }">
@@ -93,9 +98,9 @@
       <el-divider />
       <h1>License</h1>
       <p class="info-text">
-        Data is available for academic and commercial use, under a <a
-          href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="text-decoration: none;">CC-BY-4.0
-          licence</a>.
+        Data is available for academic and commercial use, under a <el-link
+          href="https://creativecommons.org/licenses/by/4.0/" target="_" style="font-size: 22px;" type="primary">CC-BY-4.0
+          licence</el-link>.
       </p>
     </div>
   </el-scrollbar>
@@ -104,7 +109,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Search, Download } from '@element-plus/icons-vue';
+import { Search, Download, InfoFilled } from '@element-plus/icons-vue';
 import { useUuidStore } from '@/stores/uuid';
 import axios from 'axios';
 const uuidStore = useUuidStore();

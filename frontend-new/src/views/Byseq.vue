@@ -102,6 +102,9 @@ import { useInfoStore } from '@/stores/info';
 import { Download, Search, InfoFilled } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { getLogger } from '@/utils/logger';
+const log = getLogger('Byseq.vue'); // 当前组件名
+log.setLevel('info');
 
 
 const router = useRouter();
@@ -117,7 +120,6 @@ const fillInput = () => {
 // 展示蛋白
 const handleTargetClick = (target: string, source: string) => {
     router.push({ name: 'Viewstr', params: { target, source } });
-    console.log(target)
 };
 
 // 选择数据库
@@ -144,7 +146,6 @@ const mmseqs_db_select = ref<string>("All");
 const loading_download = ref(false)
 const downloadselect = async () => {
     try {
-        console.log("✅ downloadselect triggered");
         loading_download.value = true
         const response = await axios.post(
             '/tips_api/download_table/',
@@ -223,7 +224,7 @@ const submitmmseqs = async () => {
             outisnone.value = true;
             ElMessage.warning('No matching data found!');
         }
-        console.log(elapsedTime)
+        log.debug(elapsedTime)
 
     } catch (error) {
         console.error('Error:', error)
