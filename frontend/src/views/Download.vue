@@ -131,7 +131,7 @@ const downloadSelect = async () => {
       '/tips_api/download_data/',
       {
         tips_id: tipsIdList,
-        sequence: false
+        sequence: true
       },
       {
         headers: {

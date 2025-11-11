@@ -152,7 +152,7 @@ const downloadpdb = async () => {
             '/tips_api/download_data/',
             {
                 tips_id: tipsIds,
-                sequence: false
+                sequence: true
             },
             {
                 headers: {
@@ -167,7 +167,7 @@ const downloadpdb = async () => {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `${props.target}.pdb`; // 设置下载的文件名
+        a.download = `${props.target}.zip`; // 设置下载的文件名
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

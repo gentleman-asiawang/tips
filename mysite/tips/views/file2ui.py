@@ -194,11 +194,13 @@ class DownloadData(APIView):
             with zipfile.ZipFile(zip_file_path, 'w') as zipf:
                 if seq_path:
                     zipf.write(seq_path, arcname=f'data/select.fasta')
-                for filename in pdb_file_list:
-                    logger.debug(filename)
-                    zipf.write(filename, arcname=f'data/Structure/{os.path.basename(filename)}')
-                return zip_file_path
-
+                if len(pdb_file_list) == 1:
+                    zipf.write(pdb_file_list[0], arcname=f'data/{os.path.basename(pdb_file_list[0])}')
+                else:
+                    for filename in pdb_file_list:
+                        logger.debug(filename)
+                        zipf.write(filename, arcname=f'data/Structure/{os.path.basename(filename)}')
+            return zip_file_path
 
     @staticmethod
     def get_full_path(basename):
