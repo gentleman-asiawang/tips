@@ -1,31 +1,35 @@
-import { createApp } from "vue";
-import App from "./App.vue";
-import router from "./router";
-import { createPinia } from "pinia";
+import './assets/main.css'
 
-// import "~/styles/element/index.scss";
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import ElementPlus from 'element-plus'
 
-// import ElementPlus from "element-plus";
-// import all element css, uncommented next line
-// import "element-plus/dist/index.css";
 
-// or use cdn, uncomment cdn link in `index.html`
+import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
+import "@/assets/styles/theme.scss"; // 引入自定义主题
 
+
+import App from './App.vue'
+import router from './router'
+
+/* add fontawesome core */
+import { library } from '@fortawesome/fontawesome-svg-core'
 /* import font awesome icon component */
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-import "~/styles/index.scss";
-import "uno.css";
+import { fas } from '@fortawesome/free-solid-svg-icons'
+import { far } from '@fortawesome/free-regular-svg-icons'
+import { fab } from '@fortawesome/free-brands-svg-icons'
 
-// If you want to use ElMessage, import it.
-import "element-plus/theme-chalk/src/message.scss";
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-const pinia = createPinia()
-const app = createApp(App);
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    app.component(key, component)
-}
-// app.use(ElementPlus);
+library.add(fas, far, fab)
 
-app.use(router);
-app.use(pinia)
-app.mount("#app");
+const app = createApp(App)
+
+app.use(ElementPlus)
+app.component('font-awesome-icon', FontAwesomeIcon)
+app.use(createPinia())
+app.use(router)
+
+
+app.mount('#app')

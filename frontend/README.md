@@ -1,42 +1,33 @@
-# element-plus-vite-starter
+# maizesite
 
-> A starter kit for Element Plus with Vite
+This template should help get you started developing with Vue 3 in Vite.
 
-- Preview: <https://vite-starter.element-plus.org>
+## Recommended IDE Setup
 
-This is an example of on-demand element-plus with [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components).
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-> If you want to import all, it may be so simple that no examples are needed. Just follow [quickstart | Docs](https://element-plus.org/zh-CN/guide/quickstart.html) and import them.
+## Type Support for `.vue` Imports in TS
 
-If you just want an on-demand import example `manually`, you can check [unplugin-element-plus/examples/vite](https://github.com/element-plus/unplugin-element-plus/tree/main/examples/vite).
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
 
-## Project setup
+## Customize configuration
 
-```bash
+See [Vite Configuration Reference](https://vite.dev/config/).
+
+## Project Setup
+
+```sh
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Compile and Hot-Reload for Development
 
-```bash
+```sh
 npm run dev
 ```
 
-### Compiles and minifies for production
+### Type-Check, Compile and Minify for Production
 
-```bash
+```sh
 npm run build
 ```
-
-## Usage
-
-```bash
-git clone https://github.com/element-plus/element-plus-vite-starter
-cd element-plus-vite-starter
-npm i
-npm run dev
-```
-
-### Custom theme
-
-See `src/styles/element/index.scss`.

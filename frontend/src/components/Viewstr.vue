@@ -1,7 +1,7 @@
 <template>
     <el-page-header v-on:back="goBack" style="margin-bottom: 5px;margin-left: 10px;margin-right: 10px;">
         <template #content>
-            <div v-if="out_data" class="flex items-center">
+            <div v-if="out_data" class="flex items-center flex-no-wrap">
                 <span class="header-text"><b>PID:</b> {{ out_data.pid }}</span>
                 <el-divider direction="vertical" border-style="dashed" style="margin: 0 6px;" />
                 <span class="header-text"><b>Species:</b> {{ out_data.species }}</span>
@@ -47,7 +47,8 @@
     </div>
     <div style="margin-top: 5px;">
         <span>
-            The predicted local distance difference test (pLDDT), on a scale from 0 to 100, is a per-residue confidence score.
+            The predicted local distance difference test (pLDDT), on a scale from 0 to 100, is a per-residue confidence
+            score.
         </span>
     </div>
 </template>
@@ -56,8 +57,9 @@
 import { Download } from '@element-plus/icons-vue'
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router'
-import { useUuidStore } from '~/store/globalStore';
+import { useUuidStore } from '@/stores/uuid';
 import { ElMessage } from 'element-plus';
+import axios from 'axios';
 
 const router = useRouter()
 const uuidStore = useUuidStore();
@@ -67,10 +69,7 @@ const descriptionRef = ref<HTMLElement | null>(null);
 const isTruncated = ref(false);
 const checkTruncation = async () => {
     await nextTick(); // 确保 DOM 更新
-    console.log(descriptionRef.value)
     if (descriptionRef.value) {
-        console.log('scrollWidth:', descriptionRef.value.scrollWidth);
-        console.log('clientWidth:', descriptionRef.value.clientWidth);
         isTruncated.value = descriptionRef.value.scrollWidth > descriptionRef.value.clientWidth;
     }
 };
@@ -113,19 +112,12 @@ const load3DStructure = () => {
 
 // 从数据库查询信息
 const out_data = ref()
-const querypyid = async () => {
+const querybyid = async () => {
     try {
-        let response
-        response = await fetch('/tips_api/query_by_id/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: props.target
-            }),
-        })
-        const data = await response.json()
-        out_data.value = data
-        console.log(data)
+        const response = await axios.get('/tips_api/query_by_id/', {
+            params: { id: props.target }
+        });
+        out_data.value = response.data;
         await nextTick();
         checkTruncation();
     } catch (error) {
@@ -136,11 +128,11 @@ const querypyid = async () => {
 // 监听 target 的变化来重新加载数据
 watch(() => props.target, () => {
     load3DStructure();    // 加载新的 3D 数据
-    querypyid();
+    querybyid();
 });
 onMounted(() => {
     load3DStructure();
-    querypyid();
+    querybyid();
 })
 
 // 返回按钮
@@ -154,31 +146,36 @@ const loading_download = ref(false)
 const downloadpdb = async () => {
     try {
         loading_download.value = true
-        const response = await fetch('/tips_api/download_data/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'uuid': uuidStore.uuid
+        // 构建 GET 请求参数
+        const tipsIds = Array.isArray(props.target) ? props.target : [props.target];
+        const response = await axios.post(
+            '/tips_api/download_data/',
+            {
+                tips_id: tipsIds,
+                sequence: false
             },
-            body: JSON.stringify({ tips_id: [props.target], sequence: false }),
-        });
-        if (!response.ok) {
-            loading_download.value = false
-            ElMessage.warning('Network response was not ok!');
-        }
-        const blob = await response.blob();
+            {
+                headers: {
+                    uuid: uuidStore.uuid
+                },
+                responseType: 'blob'
+            }
+        );
+        // 生成下载
+        const blob = new Blob([response.data], { type: 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         a.download = `${props.target}.pdb`; // 设置下载的文件名
-        loading_download.value = false
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
     } catch (error) {
         ElMessage.error('Error downloading selected targets');
         console.error(error);
+    } finally {
+        loading_download.value = false
     }
 }
 </script>
@@ -198,7 +195,7 @@ const downloadpdb = async () => {
 
 .description {
     display: block;
-    max-width: 800px;
+    max-width: 100%;
     /* 设置最大宽度 */
     overflow: hidden;
     /* 超出隐藏 */
@@ -209,12 +206,18 @@ const downloadpdb = async () => {
 .legend {
     justify-content: center;
     margin-top: 8px;
-    display: flex; 
+    display: flex;
     align-items: center;
 }
 
 .legend-item {
     display: flex;
     margin-right: 30px;
+}
+
+.flex-no-wrap {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
 }
 </style>

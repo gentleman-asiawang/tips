@@ -1,68 +1,50 @@
-<template>
-  <el-config-provider namespace="ep">
-    <BaseHeader v-if="!isNotFound" class="header" />
-    <div w="full" py="1">
-      <div v-if="fullscreenLoading" v-loading.fullscreen.lock="fullscreenLoading"></div>
-      <router-view v-slot="{ Component }" v-else>
-        <keep-alive>
-          <component :is="Component" />
-        </keep-alive>
-      </router-view>
-    </div>
-    <!-- <BaseFooter v-if="!isNotFound" /> -->
-  </el-config-provider>
-</template>
-
-<style>
-#app {
-  width: 100%;
-  text-align: center;
-  color: var(--ep-text-color-primary);
-}
-</style>
-
-<script lang="ts" setup>
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { useUuidStore, useInfoStore } from './store/globalStore';
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useUuidStore } from '@/stores/uuid';
+import { useInfoStore } from '@/stores/info';
+import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
-const route = useRoute();
-const isNotFound = computed(() => route.path === '/404');
-
-const handleWindowClose = () => {
-  const data = new FormData();
-  data.append('uuid', uuidStore.uuid);  //  Use FormData to build request data
-  navigator.sendBeacon('/tips_api/delete_all_temp_files/', data);
-};
-
-const sendUUIDToServer = async (uuid: string) => {
-  const formData = new FormData();
-  formData.append('uuid', uuid)
-  try {
-    const response = await fetch('/tips_api/get_uuid/', {
-      method: 'POST',
-      body: formData,
-    });
-    if (!response.ok) {
-      throw new Error('Failed to send UUID to the server');
-    }
-  } catch (error) {
-    console.error('Error sending UUID to server:', error);
-    throw error;
-  }
-};
+import { getLogger } from '@/utils/logger';
+const log = getLogger('App.vue'); // 当前组件名
+log.setLevel('info');
 
 const uuidStore = useUuidStore();
 const infoStore = useInfoStore();
 const fullscreenLoading = ref(true);
+
+
+const activeIndex = ref('/');
+
+const handleSelect = (index: string) => {
+  log.debug('Menu selected:', index);
+};
+
+
+// use sendBeacon sent remove file request
+const handleWindowClose = () => {
+  log.debug('Window is closing, sending UUID to server');
+  const data = new FormData();
+  data.append('uuid', uuidStore.uuid);  // Use FormData to build request data
+  navigator.sendBeacon('/tips_api/delete_all_temp_files/', data);
+};
+
+// sent uuid to server
+const sendUUIDToServer = async (uuid: string) => {
+  try {
+    const response = await axios.post('/tips_api/login/', { uuid });
+    log.debug('Server response:', response.data);
+  } catch (error) {
+    log.error('Failed to send UUID:', error);
+  }
+};
+
 onMounted(async () => {
   try {
     window.addEventListener('beforeunload', handleWindowClose);
     uuidStore.generateUuid();
     await sendUUIDToServer(uuidStore.uuid);
     await infoStore.fetchOrders();
-    fullscreenLoading.value = false
   } catch (error) {
     console.error('Error loading orders or sending UUID:', error);
     ElMessage.error({
@@ -75,19 +57,101 @@ onMounted(async () => {
       duration: 0,
       type: 'success',
     })
-    
+  } finally {
+    fullscreenLoading.value = false; // 设置加载状态为 false
   }
 });
 
-// 移除监听器
+// remove listener
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleWindowClose);
 });
+
 </script>
 
+<template>
+  <div v-if="fullscreenLoading" v-loading.fullscreen.lock="fullscreenLoading"></div>
+  <div v-else>
+    <el-container style="height: 100vh; display: flex; flex-direction: column;">
+      <el-header>
+        <el-menu class="center-menu" :default-active="activeIndex" mode="horizontal" @select="handleSelect"
+          popper-effect="light" :ellipsis="false" :router="true"
+          style="border: 0; top: 0; left: 0; width: 100%; z-index: 1000; background-color: #ffffff; justify-content: center;">
+          <el-menu-item index="/"><span>Home</span></el-menu-item>
+          <el-sub-menu index="/2">
+            <template #title><span class="menu-item-text">Search</span></template>
+            <el-menu-item index="/bysequence">by sequence</el-menu-item>
+            <el-menu-item index="/bystructure">by structure</el-menu-item>
+          </el-sub-menu>
+          <el-menu-item index="/visualize" class="menu-item"><span
+              class="menu-item-text">Visualize</span></el-menu-item>
+          <el-menu-item index="/phylogeny" class="menu-item"><span
+              class="menu-item-text">Phylogeny</span></el-menu-item>
+          <el-menu-item index="/download" class="menu-item"><span class="menu-item-text">Download</span></el-menu-item>
+          <el-menu-item index="/about" class="menu-item"><span class="menu-item-text">About</span></el-menu-item>
+        </el-menu>
+      </el-header>
+      <el-main style="flex-grow: 1;padding-top: 0;">
+        <router-view v-slot="{ Component }">
+          <keep-alive>
+            <component :is="Component" />
+          </keep-alive>
+        </router-view>
+      </el-main>
+    </el-container>
+  </div>
+</template>
+
 <style scoped>
-.header {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(10px);
+/* Center the menu */
+.el-menu {
+  display: flex;
+  justify-content: center;
+  /* Centers the menu items */
+  gap: 0px;
+  /* Adds spacing between the menu items */
+}
+
+.el-menu-item {
+  padding: 0 15px;
+  /* Optional padding to make the menu items more spacious */
+}
+
+.menu-item-text {
+  font-size: 25px !important;
+  /* Ensure the text is the same size */
+  font-family: "Helvetica", Times, Sans-serif;
+  font-weight: bold;
+}
+
+.el-header {
+  padding: 0;
+  margin: 0;
+}
+
+.el-menu>.el-menu-item,
+.el-menu>.el-sub-menu .menu-item-text {
+  font-size: 25px;
+  font-family: "Helvetica", Times, Sans-serif;
+  font-weight: bold;
+}
+
+.el-menu--horizontal {
+  --el-menu-horizontal-height: 60px;
+}
+
+.el-menu--horizontal>.el-menu>.el-menu-item {
+  font-size: 15px !important;
+  font-weight: normal !important;
+}
+
+.container {
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: 1300px;
+  text-align: left;
+  line-height: 1.4;
+  padding-top: 0px;
+  margin: 0 auto;
 }
 </style>

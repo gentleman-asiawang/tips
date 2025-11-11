@@ -17,7 +17,7 @@
 <script lang="ts" setup>
 import { Download } from '@element-plus/icons-vue'
 import { ref, onMounted, watch } from 'vue';
-import { useTreeStore } from '~/store/globalStore';
+import { useTreeStore } from '@/stores/tree';
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus';
 

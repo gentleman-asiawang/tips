@@ -6,22 +6,19 @@
   <link rel="icon" href="/favicon.svg?v=<%= version %>" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TIPS</title>
-  <script src="https://kit.fontawesome.com/dec8e7b7fc.js" crossorigin="anonymous"></script>
-  <link rel="stylesheet" type="text/css"
-    href="/js/pdbe-molstar-light.css?v=<%= version %>" />
-  <script type="text/javascript"
-    src="/js/pdbe-molstar-plugin.js?v=<%= version %>"></script>
+  <link rel="stylesheet" type="text/css" href="/js/pdbe-molstar-light.css?v=<%= version %>" />
+  <script type="text/javascript" src="/js/pdbe-molstar-plugin.js?v=<%= version %>"></script>
   <script type="text/javascript" src="/js/phyloview.main.js?v=<%= version %>"></script>
-  <!-- element css cdn, if you use custom theme, remove it. -->
-  <!-- <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css"
-    /> -->
-
+  <style>
+    #app {
+      width: 100%;
+      text-align: center;
+      color: var(--ep-text-color-primary);
+    }
+  </style>
 </head>
 
-<body>
-  <!-- Container for Vue app -->
+<body style="margin: 0 0;">
   <div id="app" style="z-index: 10;"></div>
   <script type="module" src="/src/main.ts"></script>
 </body>
