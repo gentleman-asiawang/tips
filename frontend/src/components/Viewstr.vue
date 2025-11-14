@@ -17,11 +17,33 @@
         </template>
         <template #extra>
             <div class="flex items-center">
-                <el-button @click="downloadpdb" size="small" type="primary" :loading="loading_download">
-                    Download Structure<el-icon class="el-icon--right">
-                        <Download />
-                    </el-icon>
-                </el-button>
+                <el-dropdown>
+                    <el-button :loading="loading_download" type="primary" size="small">
+                        Download<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item @click="() => downloadpdb('structure')">
+                                Structure
+                                <el-icon class="el-icon--right">
+                                    <Download />
+                                </el-icon>
+                            </el-dropdown-item>
+                            <el-dropdown-item @click="() => downloadpdb('sequence')">
+                                Sequence
+                                <el-icon class="el-icon--right">
+                                    <Download />
+                                </el-icon>
+                            </el-dropdown-item>
+                            <el-dropdown-item @click="() => downloadpdb('both')">
+                                All
+                                <el-icon class="el-icon--right">
+                                    <Download />
+                                </el-icon>
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
             </div>
         </template>
     </el-page-header>
@@ -54,7 +76,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Download } from '@element-plus/icons-vue'
+import { Download, ArrowDown } from '@element-plus/icons-vue'
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router'
 import { useUuidStore } from '@/stores/uuid';
@@ -143,7 +165,7 @@ function goBack() {
 
 // 下载pdb文件
 const loading_download = ref(false)
-const downloadpdb = async () => {
+const downloadpdb = async (downType = 'both') => {
     try {
         loading_download.value = true
         // 构建 GET 请求参数
@@ -152,7 +174,7 @@ const downloadpdb = async () => {
             '/tips_api/download_data/',
             {
                 tips_id: tipsIds,
-                down_type: 'both'
+                down_type: downType
             },
             {
                 headers: {
@@ -162,18 +184,31 @@ const downloadpdb = async () => {
             }
         );
         // 生成下载
-        const blob = new Blob([response.data], { type: 'application/octet-stream' });
-        const url = window.URL.createObjectURL(blob);
+        // 从响应头中获取文件名
+        let filename = 'select.zip'; // 默认名
+        if (downType == 'sequence') {
+            filename = 'select.fasta';
+        } else if (downType == 'structure') {
+            filename = 'select.pdb';
+        }
+        const disposition = response.headers['content-disposition'];
+        if (disposition && disposition.includes('filename=')) {
+            filename = disposition
+                .split('filename=')[1]
+                .trim()            // 去掉空格
+                .replace(/['"]/g, ''); // 去掉可能的引号
+        }
+        const url = window.URL.createObjectURL(response.data);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `${props.target}.zip`; // 设置下载的文件名
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
+        a.remove();
         window.URL.revokeObjectURL(url);
     } catch (error) {
         ElMessage.error('Error downloading selected targets');
-        console.error(error);
     } finally {
         loading_download.value = false
     }

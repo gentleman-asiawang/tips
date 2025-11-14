@@ -144,7 +144,7 @@ const downloadSelect = async () => {
       }
     );
     // 从响应头中获取文件名
-    let filename = 'downloaded_file'; // 默认名
+    let filename = 'select.zip'; // 默认名
     const disposition = response.headers['content-disposition'];
     if (disposition && disposition.includes('filename=')) {
       filename = disposition

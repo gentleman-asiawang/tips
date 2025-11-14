@@ -159,7 +159,7 @@ class DownloadData(APIView):
         down_type = request.data.get('down_type', 'pdb') # 默认只下载pdb
         if not down_type:
             return Response({'error': 'down_type parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
-        if down_type not in ['pdb', 'sequence', 'both']:
+        if down_type not in ['structure', 'sequence', 'both']:
             return Response({'error': 'Download type error'}, status=status.HTTP_404_NOT_FOUND)
 
         data_infos = DataInfo.objects.filter(tips_id__in=tips_id)
@@ -178,14 +178,17 @@ class DownloadData(APIView):
                 return Response({'error': 'Blast command failed', 'details': e.stderr},
                                 status=status.HTTP_400_BAD_REQUEST)
             buffer = self.create_zip_in_memory(data_infos, fasta_text)
-            return FileResponse(buffer, as_attachment=True, filename='select.zip')
-        elif down_type == 'pdb': # 只输出结构的情况，如果只输出一个就不需要打包，否则需要打包返回
+            if len(found_ids) == 1:
+                return FileResponse(buffer, as_attachment=True, filename=f"{next(iter(found_ids))}.zip")
+            else:
+                return FileResponse(buffer, as_attachment=True, filename='select.zip')
+        elif down_type == 'structure': # 只输出结构的情况，如果只输出一个就不需要打包，否则需要打包返回
             full_file_paths = [self.get_full_path(di.basename) for di in data_infos]
             if len(full_file_paths) == 1: # 只输出一个，直接返回序列文件
                 di = data_infos.first()
                 full_path = self.get_full_path(di.basename)
                 ext = os.path.splitext(full_path)[1]
-                filename = f"select{ext}"
+                filename = f"{next(iter(found_ids))}{ext}"
                 return FileResponse(open(full_file_paths[0], 'rb'), as_attachment=True, filename=filename)
             else: # 选择了多个文件，要打包后返回
                 buffer = self.create_zip_in_memory(data_infos, fasta_text)
@@ -211,13 +214,10 @@ class DownloadData(APIView):
         buffer = io.BytesIO()  # 内存中存放 ZIP
 
         with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # 写入 FASTA（直接内存文本）
-            if fasta_text:
-                zipf.writestr(f"{next(iter(found_ids))}.fasta", fasta_text)
             # 写入 pdb 文件（读取本地文件内容到内存 ZIP）
             if len(found_ids) == 1:
                 if fasta_text:
-                    zipf.writestr("select.fasta", fasta_text)
+                    zipf.writestr(f"{next(iter(found_ids))}.fasta", fasta_text)
                 di = data_infos.first()
                 full_path = self.get_full_path(di.basename)
                 ext = os.path.splitext(full_path)[1]
