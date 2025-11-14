@@ -74,7 +74,9 @@
       <h1>Download Database</h1>
       <p class="info-text">
         Database of protein structures with well-known functions.
-        <el-tooltip content="<span>The CATH SSG5 database can be obtained from <a style='text-decoration: none;color: #409EFF;' href='https://www.science.org/doi/10.1126/science.adq4946' target='_'>this study</a></span>" raw-content placement="top">
+        <el-tooltip
+          content="<span>The CATH SSG5 database can be obtained from <a style='text-decoration: none;color: #409EFF;' href='https://www.science.org/doi/10.1126/science.adq4946' target='_'>this study</a></span>"
+          raw-content placement="top">
           <el-icon color="#409EFF">
             <InfoFilled />
           </el-icon>
@@ -99,7 +101,8 @@
       <h1>License</h1>
       <p class="info-text">
         Data is available for academic and commercial use, under a <el-link
-          href="https://creativecommons.org/licenses/by/4.0/" target="_" style="font-size: 22px;" type="primary">CC-BY-4.0
+          href="https://creativecommons.org/licenses/by/4.0/" target="_" style="font-size: 22px;"
+          type="primary">CC-BY-4.0
           licence</el-link>.
       </p>
     </div>
@@ -131,7 +134,7 @@ const downloadSelect = async () => {
       '/tips_api/download_data/',
       {
         tips_id: tipsIdList,
-        sequence: true
+        down_type: 'both'
       },
       {
         headers: {
@@ -140,14 +143,24 @@ const downloadSelect = async () => {
         responseType: 'blob'
       }
     );
-    const blob = new Blob([response.data], { type: 'application/octet-stream' });
-    const url = window.URL.createObjectURL(blob);
+    // 从响应头中获取文件名
+    let filename = 'downloaded_file'; // 默认名
+    const disposition = response.headers['content-disposition'];
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition
+        .split('filename=')[1]
+        .trim()            // 去掉空格
+        .replace(/['"]/g, ''); // 去掉可能的引号
+    }
+    const url = window.URL.createObjectURL(response.data);
     const a = document.createElement('a');
     a.style.display = 'none';
     a.href = url;
-    a.download = 'select.zip'; // 设置下载的文件名
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Error:', error)
   } finally {

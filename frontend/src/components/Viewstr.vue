@@ -152,7 +152,7 @@ const downloadpdb = async () => {
             '/tips_api/download_data/',
             {
                 tips_id: tipsIds,
-                sequence: true
+                down_type: 'both'
             },
             {
                 headers: {
