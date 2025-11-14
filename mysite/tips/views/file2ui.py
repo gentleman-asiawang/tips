@@ -173,72 +173,73 @@ class DownloadData(APIView):
         fasta_text = None
         if down_type == 'both':
             try:
-                fasta_text = self.get_sequence(tips_id)
+                fasta_text = self.get_sequence(found_ids)
             except subprocess.CalledProcessError as e:
                 return Response({'error': 'Blast command failed', 'details': e.stderr},
                                 status=status.HTTP_400_BAD_REQUEST)
+            buffer = self.create_zip_in_memory(data_infos, fasta_text)
+            return FileResponse(buffer, as_attachment=True, filename='select.zip')
         elif down_type == 'pdb': # 只输出结构的情况，如果只输出一个就不需要打包，否则需要打包返回
             full_file_paths = [self.get_full_path(di.basename) for di in data_infos]
             if len(full_file_paths) == 1: # 只输出一个，直接返回序列文件
-                full_path = full_file_paths[0]
+                di = data_infos.first()
+                full_path = self.get_full_path(di.basename)
                 ext = os.path.splitext(full_path)[1]
                 filename = f"select{ext}"
                 return FileResponse(open(full_file_paths[0], 'rb'), as_attachment=True, filename=filename)
             else: # 选择了多个文件，要打包后返回
-                buffer = self.create_zip_in_memory(full_file_paths, fasta_text)
+                buffer = self.create_zip_in_memory(data_infos, fasta_text)
                 return FileResponse(buffer, as_attachment=True, filename='select.zip')
-        else: # 只输出序列的情况，不需要压缩，直接返回
+        else: # 只输出序列的情况，不需要压缩，如果只查询了一个，用tips_id命名，否则用select命名
             try:
-                fasta_text = self.get_sequence(tips_id)
+                fasta_text = self.get_sequence(found_ids)
             except subprocess.CalledProcessError as e:
                 return Response({'error': 'Blast command failed', 'details': e.stderr},
                                 status=status.HTTP_400_BAD_REQUEST)
             if fasta_text is None:
                 return Response({'error': 'Fasta file not found'}, status=status.HTTP_404_NOT_FOUND)
+            if len(found_ids) == 1:
+                filename = f"{next(iter(found_ids))}.fasta"
+            else:
+                filename = "select.fasta"
             fasta_bytes = BytesIO(fasta_text.encode("utf-8"))
-            return FileResponse(fasta_bytes, as_attachment=True, filename='select.fasta')
+            return FileResponse(fasta_bytes, as_attachment=True, filename=filename)
 
 
-    @staticmethod
-    def create_zip(pdb_file_list, fasta_text, uuid):
-        temp_dir = f'{settings.TEMP_DIR}/{uuid}'
-        os.makedirs(temp_dir, exist_ok=True)
-        with tempfile.NamedTemporaryFile(delete=False, dir=f'{settings.TEMP_DIR}/{uuid}', suffix='.zip') as temp_zip_file:
-            zip_file_path = temp_zip_file.name
-            UuidManager.add_entry(uuid, 'zip', zip_file_path)
-            with zipfile.ZipFile(zip_file_path, 'w') as zipf:
-                if fasta_text is not None:
-                    zipf.write(fasta_text, arcname=f'data/select.fasta')
-                if len(pdb_file_list) == 1:
-                    zipf.write(pdb_file_list[0], arcname=f'data/{os.path.basename(pdb_file_list[0])}')
-                else:
-                    for filename in pdb_file_list:
-                        logger.debug(filename)
-                        zipf.write(filename, arcname=f'data/Structure/{os.path.basename(filename)}')
-            return zip_file_path
-
-    @staticmethod
-    def create_zip_in_memory(pdb_file_list, fasta_text):
+    def create_zip_in_memory(self, data_infos, fasta_text):
+        found_ids = set(data_infos.values_list('tips_id', flat=True))
         buffer = io.BytesIO()  # 内存中存放 ZIP
 
         with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
             # 写入 FASTA（直接内存文本）
             if fasta_text:
-                zipf.writestr("select.fasta", fasta_text)
-
+                zipf.writestr(f"{next(iter(found_ids))}.fasta", fasta_text)
             # 写入 pdb 文件（读取本地文件内容到内存 ZIP）
-            if len(pdb_file_list) == 1:
-                with open(pdb_file_list[0], 'rb') as f:
-                    zipf.writestr(f"{os.path.basename(pdb_file_list[0])}", f.read())
+            if len(found_ids) == 1:
+                if fasta_text:
+                    zipf.writestr("select.fasta", fasta_text)
+                di = data_infos.first()
+                full_path = self.get_full_path(di.basename)
+                ext = os.path.splitext(full_path)[1]
+                filename = f"{next(iter(found_ids))}{ext}"
+
+                with open(full_path, 'rb') as f:
+                    zipf.writestr(filename, f.read())
             else:
-                for filename in pdb_file_list:
-                    with open(filename, 'rb') as f:
-                        zipf.writestr(f"data/Structure/{os.path.basename(filename)}", f.read())
+                if fasta_text:
+                    zipf.writestr("select.fasta", fasta_text)
+                for tips_id in found_ids:
+                    di = data_infos.get(tips_id=tips_id)
+                    file_path = self.get_full_path(di.basename)
+                    ext = os.path.splitext(file_path)[1]
+                    zip_name = f"Structure/{tips_id}{ext}"
+                    with open(file_path, 'rb') as f:
+                        zipf.writestr(zip_name, f.read())
 
         buffer.seek(0)  # 回到文件开头
 
         # 返回 FileResponse 给前端
-        return FileResponse(buffer, as_attachment=True, filename='select.zip')
+        return buffer
 
     @staticmethod
     def get_full_path(basename):
