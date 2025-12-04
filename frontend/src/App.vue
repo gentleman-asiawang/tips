@@ -24,9 +24,8 @@ const handleSelect = (index: string) => {
 // use sendBeacon sent remove file request
 const handleWindowClose = () => {
   log.debug('Window is closing, sending UUID to server');
-  const data = new FormData();
-  data.append('uuid', uuidStore.uuid);  // Use FormData to build request data
-  navigator.sendBeacon('/tips_api/delete_all_temp_files/', data);
+  const body = new URLSearchParams({ uuid: uuidStore.uuid }).toString();
+  navigator.sendBeacon('/tips_api/delete_all_temp_files/', new Blob([body], { type: 'application/x-www-form-urlencoded' }));
 };
 
 // sent uuid to server
@@ -64,7 +63,7 @@ onMounted(async () => {
 
 // remove listener
 onBeforeUnmount(() => {
-  window.removeEventListener('beforeunload', handleWindowClose);
+  window.removeEventListener('unload', handleWindowClose);
 });
 
 </script>

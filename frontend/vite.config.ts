@@ -27,8 +27,8 @@ export default defineConfig({
     hmr: true,
     proxy: {
       '/tips_api': {
-        target: 'https://tips.shenxlab.com',
-        // target: 'http://127.0.0.1:8000/',
+        // target: 'https://tips.shenxlab.com',
+        target: 'http://127.0.0.1:8000/',
         changeOrigin: true,
       },
     },
