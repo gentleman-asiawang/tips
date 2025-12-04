@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 import csv
+import stat
 import tempfile
 from django.conf import settings
 from django.db import connection
@@ -10,16 +11,27 @@ logger = logging.getLogger(__name__)
 
 class UuidManager:
     uuid_storage = {}
+
+    @staticmethod
+    def _on_rm_error(func, path, exc_info):
+        """强制删除只读文件"""
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
     @classmethod
     def add_entry(cls, uuid, file_type, file_path):
         """添加 UUID 相关的文件路径及配置信息"""
         if uuid not in cls.uuid_storage:
             cls.uuid_storage[uuid] = {}  # 创建新的 UUID 条目
-        if file_type in cls.uuid_storage[uuid] and cls.uuid_storage[uuid][file_type]:
-            existing_file_path = cls.uuid_storage[uuid][file_type]
-            if os.path.exists(existing_file_path):  # 确保文件存在
-                os.remove(existing_file_path)  # 删除旧文件
-                logger.debug(f"The file {existing_file_path} exists, delete the file")
+
+        # 如果存在旧文件，尝试删除
+        old = cls.uuid_storage[uuid].get(file_type)
+        if old and os.path.exists(old):
+            try:
+                os.remove(old)
+                logger.debug(f"Removed old file: {old}")
+            except Exception as e:
+                logger.error(f"Failed to remove old file {old}: {e}")
 
         cls.uuid_storage[uuid][file_type] = file_path  # 记录文件路径及配置
         logger.debug(f"Saved file in {file_path}")
@@ -33,12 +45,21 @@ class UuidManager:
     def delete_uuid_entry(cls, uuid):
         logger.debug(f'Current uuid: {uuid}')
         """删除 UUID 及其关联的所有文件信息"""
-        if uuid in cls.uuid_storage and os.path.exists(f'{settings.TEMP_DIR}/{uuid}'):
-            shutil.rmtree(f'{settings.TEMP_DIR}/{uuid}')
-            del cls.uuid_storage[uuid]  # 删除 UUID 相关条目
-        else:
-            shutil.rmtree(f'{settings.TEMP_DIR}/{uuid}')
-            logger.warning(f'The uuid {uuid} does not exist, but still try to delete the directory')
+        uuid_path = os.path.join(settings.TEMP_DIR, uuid)
+        # 删除目录（存在才删）
+        if os.path.exists(uuid_path):
+            try:
+                shutil.rmtree(uuid_path, onerror=cls._on_rm_error)
+                logger.debug(f"Directory deleted: {uuid_path}")
+            except Exception as e:
+                logger.error(f"Failed to delete directory {uuid_path}: {e}")
+                return False
+
+        # 删除记录
+        if uuid in cls.uuid_storage:
+            del cls.uuid_storage[uuid]
+
+        return True
 
 class FileReshape:
     @staticmethod
