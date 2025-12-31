@@ -5,8 +5,7 @@ from django.conf import settings
 import logging
 import datetime
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("apps")
 
 def clean_uuid_tmp():
     temp_dir = settings.TEMP_DIR

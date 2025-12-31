@@ -24,7 +24,7 @@ TEMP_DIR = os.path.join(BASE_DIR, 'temp')
 SECRET_KEY = 'django-insecure-#ftta%_ad(#2)(axmz*=u+ek%4p-r9no9vk*jcksc%i1%a_1xh'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
