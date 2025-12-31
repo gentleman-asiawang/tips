@@ -68,7 +68,7 @@
       <h2 class="dot-heading">Full Dataset</h2>
       <p class="info-text">
         The full dataset of all predicted structures and phylogenomic matrix are available at <el-link
-          style="font-size: 22px;" type="primary" href="https://figshare.com/s/7b51b2fa347954a02bc4"
+          style="font-size: 22px;" type="primary" href="https://doi.org/10.25452/figshare.plus.25906339"
           target="_">Figshare+</el-link>.
       </p>
       <h1>Download Database</h1>
