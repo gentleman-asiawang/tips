@@ -48,9 +48,15 @@
           databases, if available.
         </p>
         <p class="p2">
-          Wu W., Cui C., Zhu Y., Chen J., Zhuang Q., Wang Y., Liu Z., Gao H., Ou G.-Z., Liu C., Tao M., Chen Y., Pan R., Zhang G.,
+          Wu W., Cui C., Zhu Y., Chen J., Zhuang Q., Wang Y., Liu Z., Gao H., Ou G.-Z., Liu C., Tao M., Chen Y., Pan R.,
+          Zhang G.,
           Cai H., Yang J., Chen X., Zhou X., Wang S., & Shen X.-X. 2026. Structural genomics sheds light on protein
-          functions and remote homologs across the insect tree of life. <em>Cell Research</em>, in press.
+          functions and remote homologs across the insect tree of life. <em>Cell Research</em>.<el-button
+            class="pdf-button" type="primary" text :loading="downloading" :disabled="downloading" @click="downloadPdf">
+            PDF<el-icon>
+              <Download />
+            </el-icon>
+          </el-button>
         </p>
       </div>
       <div class="text-container2">
@@ -65,6 +71,30 @@
 
 <script lang="ts" setup>
 import mainpicUrl from "@/assets/index_tree_reduced_size.png"; // make sure picture in `src/assets/`
+import { ref } from 'vue';
+import { Download } from '@element-plus/icons-vue';
+
+const downloading = ref(false);
+
+const downloadPdf = async () => {
+  if (downloading.value) return;
+  downloading.value = true;
+  try {
+    const url = 'https://tips.shenxlab.com/tips_data/2026_Wu_etal_Cell_Res.pdf';
+    const response = await fetch(url, { mode: 'cors' });
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = '2026_Wu_etal_Cell_Res.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  } finally {
+    downloading.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -209,5 +239,9 @@ import mainpicUrl from "@/assets/index_tree_reduced_size.png"; // make sure pict
 
 .colored-s {
   color: #E3C83B;
+}
+
+.pdf-button {
+  font-size: 18px;
 }
 </style>

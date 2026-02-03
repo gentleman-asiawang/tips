@@ -1,15 +1,25 @@
 <template>
   <el-scrollbar>
     <div class="text-container">
-      <p class="title1">
-        <span class="colored-t">T</span><span class="colored-i">I</span><span class="colored-p">P</span><span
-          class="colored-s">S</span> Developers:
-      </p>
-      <p class="developer-name">Xing-Xing Shen</p>
-      <p class="developer-name">Jinghua Yang</p>
-      <p class="developer-name">Yazhou Wang</p>
-      <p class="developer-name">Weiyin Wu</p>
-      <p class="developer-name">Jingxuan Chen</p>
+      <el-row>
+        <el-col :span="12">
+          <p class="title1">
+            <span class="colored-t">T</span><span class="colored-i">I</span><span class="colored-p">P</span><span
+              class="colored-s">S</span> Developers:
+          </p>
+          <p class="developer-name">Xing-Xing Shen</p>
+          <p class="developer-name">Jinghua Yang</p>
+          <p class="developer-name">Yazhou Wang</p>
+          <p class="developer-name">Weiyin Wu</p>
+          <p class="developer-name">Jingxuan Chen</p>
+        </el-col>
+        <el-col :span="12">
+          <br>
+          <br>
+          <!-- <div id="map-container"></div> -->
+        </el-col>
+      </el-row>
+
       <p class="contact-info"><strong>Contact:</strong> please contact Dr. Xing-Xing Shen
         (xingxingshen{at}zju.edu.cn)
         if you have any issues or requests about TIPS.</p>
@@ -21,7 +31,12 @@
         Wu W., Cui C., Zhu Y., Chen J., Zhuang Q., Wang Y., Liu Z., Gao H., Ou G.-Z., Liu C., Tao M., Chen Y., Pan R.,
         Zhang G.,
         Cai H., Yang J., Chen X., Zhou X., Wang S., & Shen X.-X. 2026. Structural genomics sheds light on
-        protein functions and remote homologs across the insect tree of life. <em>Cell Research</em>, in press.
+        protein functions and remote homologs across the insect tree of life. <em>Cell Research</em>.<el-button
+          class="pdf-button" type="primary" text :loading="downloading" :disabled="downloading" @click="downloadPdf">
+          PDF<el-icon>
+            <Download />
+          </el-icon>
+        </el-button>
       </p>
       <p class="info-text">Please also cite the relevant paper if you use the corresponding option:</p>
 
@@ -61,10 +76,52 @@
         coverage
         for over 214 million protein sequences. <em>Nucleic Acids Research</em> 52(D1), D368–D375.
         https://doi.org/10.1093/nar/gkad1011.</p>
-
+      
     </div>
+
+    <!-- <script type="text/javascript" id="mapmyvisitors" src="//mapmyvisitors.com/map.js?d=p5Wc1D2wE7MneUWSpptVsVaSF66QZ_7npsw0SnAWvFQ&cl=ffffff&w=a"></script> -->
   </el-scrollbar>
 </template>
+<script lang="ts" setup>
+import { ref, onMounted } from 'vue';
+import { Download } from '@element-plus/icons-vue';
+
+const downloading = ref(false);
+
+const downloadPdf = async () => {
+  if (downloading.value) return;
+  downloading.value = true;
+  try {
+    const url = 'https://tips.shenxlab.com/tips_data/2026_Wu_etal_Cell_Res.pdf';
+    const response = await fetch(url, { mode: 'cors' });
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = '2026_Wu_etal_Cell_Res.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  } finally {
+    downloading.value = false;
+  }
+};
+
+onMounted(() => {
+  const container = document.getElementById('map-container');
+  if (container) {
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.id = 'mapmyvisitors';
+    // 记得换成你完整的 src 地址
+    script.src = '//mapmyvisitors.com/map.js?d=p5Wc1D2wE7MneUWSpptVsVaSF66QZ...';
+
+    // 将脚本添加到这个特定的 div 中
+    container.appendChild(script);
+  }
+});
+</script>
 
 <style scoped>
 .text-container {
@@ -148,6 +205,10 @@
 .sub-title,
 .sub-article {
   margin-left: 20px;
+}
+
+.pdf-button {
+  font-size: 18px;
 }
 
 
