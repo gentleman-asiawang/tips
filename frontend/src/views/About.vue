@@ -16,7 +16,7 @@
         <el-col :span="12">
           <br>
           <br>
-          <!-- <div id="map-container"></div> -->
+          <div id="map-container"></div>
         </el-col>
       </el-row>
 
@@ -31,12 +31,9 @@
         Wu W., Cui C., Zhu Y., Chen J., Zhuang Q., Wang Y., Liu Z., Gao H., Ou G.-Z., Liu C., Tao M., Chen Y., Pan R.,
         Zhang G.,
         Cai H., Yang J., Chen X., Zhou X., Wang S., & Shen X.-X. 2026. Structural genomics sheds light on
-        protein functions and remote homologs across the insect tree of life. <em>Cell Research</em>.<el-button
-          class="pdf-button" type="primary" text :loading="downloading" :disabled="downloading" @click="downloadPdf">
-          PDF<el-icon>
-            <Download />
-          </el-icon>
-        </el-button>
+        protein functions and remote homologs across the insect tree of life.<em>Cell Research</em>.<a
+          style="color: #409eff;font-size: 22px;margin-left: 8px;cursor: pointer;vertical-align: baseline;"
+          href="javascript:void(0)" @click="!downloading && downloadPdf()">PDF</a>
       </p>
       <p class="info-text">Please also cite the relevant paper if you use the corresponding option:</p>
 
@@ -76,7 +73,7 @@
         coverage
         for over 214 million protein sequences. <em>Nucleic Acids Research</em> 52(D1), D368–D375.
         https://doi.org/10.1093/nar/gkad1011.</p>
-      
+
     </div>
 
     <!-- <script type="text/javascript" id="mapmyvisitors" src="//mapmyvisitors.com/map.js?d=p5Wc1D2wE7MneUWSpptVsVaSF66QZ_7npsw0SnAWvFQ&cl=ffffff&w=a"></script> -->
@@ -84,7 +81,6 @@
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { Download } from '@element-plus/icons-vue';
 
 const downloading = ref(false);
 
@@ -114,10 +110,9 @@ onMounted(() => {
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.id = 'mapmyvisitors';
-    // 记得换成你完整的 src 地址
-    script.src = '//mapmyvisitors.com/map.js?d=p5Wc1D2wE7MneUWSpptVsVaSF66QZ...';
 
-    // 将脚本添加到这个特定的 div 中
+    // 获取的网址的后边那部分
+    script.src = '//mapmyvisitors.com/map.js?d=p5Wc1D2wE7MneUWSpptVsVaSF66QZ...';
     container.appendChild(script);
   }
 });
@@ -208,7 +203,7 @@ onMounted(() => {
 }
 
 .pdf-button {
-  font-size: 18px;
+  font-size: 22px;
 }
 
 
