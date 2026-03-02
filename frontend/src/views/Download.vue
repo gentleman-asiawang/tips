@@ -161,6 +161,11 @@ const downloadSelect = async () => {
         responseType: 'blob'
       }
     );
+    const missingIds = response.headers['x-warning-missing-ids'];
+
+    if (missingIds) {
+      ElMessage.warning(`Partial download completed, but the following IDs were not found in the database: ${missingIds}`);
+    }
     // 从响应头中获取文件名
     let filename = 'select.zip'; // 默认名
     const disposition = response.headers['content-disposition'];

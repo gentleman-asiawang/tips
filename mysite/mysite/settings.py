@@ -55,6 +55,8 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+CORS_EXPOSE_HEADERS = ['Content-Disposition', 'X-Warning-Missing-IDs']
+
 ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [

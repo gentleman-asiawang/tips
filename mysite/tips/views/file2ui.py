@@ -166,10 +166,12 @@ class DownloadData(APIView):
         data_infos = DataInfo.objects.filter(tips_id__in=tips_id)
         found_ids = set(data_infos.values_list('tips_id', flat=True))
         missing_ids = set(tips_id) - found_ids
-        if missing_ids:
-            return Response({'warning': 'Some tips_id not found', 'missing_ids': list(missing_ids)}, status=status.HTTP_404_NOT_FOUND)
+        # if missing_ids:
+        #     return Response({'warning': 'Some tips_id not found', 'missing_ids': list(missing_ids)}, status=status.HTTP_404_NOT_FOUND)
         if found_ids is None:
             return Response({'error': 'No data found for given tips_id'}, status=status.HTTP_404_NOT_FOUND)
+
+        warning_msg = f"Missing: {','.join(missing_ids)}" if missing_ids else ""
 
         fasta_text = None
         if down_type == 'both':
@@ -180,9 +182,9 @@ class DownloadData(APIView):
                                 status=status.HTTP_400_BAD_REQUEST)
             buffer = self.create_zip_in_memory(data_infos, fasta_text)
             if len(found_ids) == 1:
-                return FileResponse(buffer, as_attachment=True, filename=f"{next(iter(found_ids))}.zip")
+                response = FileResponse(buffer, as_attachment=True, filename=f"{next(iter(found_ids))}.zip")
             else:
-                return FileResponse(buffer, as_attachment=True, filename='select.zip')
+                response = FileResponse(buffer, as_attachment=True, filename='select.zip')
         elif down_type == 'structure': # 只输出结构的情况，如果只输出一个就不需要打包，否则需要打包返回
             full_file_paths = [self.get_full_path(di.basename) for di in data_infos]
             if len(full_file_paths) == 1: # 只输出一个，直接返回序列文件
@@ -190,10 +192,10 @@ class DownloadData(APIView):
                 full_path = self.get_full_path(di.basename)
                 ext = os.path.splitext(full_path)[1]
                 filename = f"{next(iter(found_ids))}{ext}"
-                return FileResponse(open(full_file_paths[0], 'rb'), as_attachment=True, filename=filename)
+                response = FileResponse(open(full_file_paths[0], 'rb'), as_attachment=True, filename=filename)
             else: # 选择了多个文件，要打包后返回
                 buffer = self.create_zip_in_memory(data_infos, fasta_text)
-                return FileResponse(buffer, as_attachment=True, filename='select.zip')
+                response = FileResponse(buffer, as_attachment=True, filename='select.zip')
         else: # 只输出序列的情况，不需要压缩，如果只查询了一个，用tips_id命名，否则用select命名
             try:
                 fasta_text = self.get_sequence(found_ids)
@@ -207,7 +209,9 @@ class DownloadData(APIView):
             else:
                 filename = "select.fasta"
             fasta_bytes = BytesIO(fasta_text.encode("utf-8"))
-            return FileResponse(fasta_bytes, as_attachment=True, filename=filename)
+            response = FileResponse(fasta_bytes, as_attachment=True, filename=filename)
+        response['X-Warning-Missing-IDs'] = ",".join(missing_ids)
+        return response
 
 
     def create_zip_in_memory(self, data_infos, fasta_text):
