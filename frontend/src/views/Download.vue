@@ -21,9 +21,10 @@
       <h1>Download Structure</h1>
       <h2 class="dot-heading">By Protein IDs</h2>
       <p class="info-text">
-        Given a list of protein IDs, you can batch download the corresponding structures. Note that maximum number of
-        protein
-        IDs is 100. The protein IDs can be found in the master table (List_of_proteinIDs_with_structures.tsv).
+        Given a list of protein IDs, you can batch download the corresponding structures and sequences. Note that the
+        maximum
+        number of protein IDs is 1000. The protein IDs can be found in the master table
+        (List_of_proteinIDs_with_structures.tsv).
       </p>
 
       <div style="display: flex; align-items: flex-start; width: 100%;">
@@ -128,6 +129,23 @@ const downloadSelect = async () => {
     return;
   }
   const tipsIdList = idinput.value.split('\n').map(line => line.trim()).filter(line => line !== '');
+  if (tipsIdList.length === 0) {
+    ElMessage.warning('Please input id!');
+    return;
+  }
+
+  // 格式校验：检查是否所有 ID 都以 'P' 开头，并且后面跟着12位数字
+  const idRegex = /^P\d{12}$/;
+  const invalidIds = tipsIdList.filter(id => !idRegex.test(id));
+  if (invalidIds.length > 0) {
+    ElMessage.error(`Invalid ID detected (must start with 'P' followed by 12 digits): ${invalidIds.slice(0, 3).join(', ')}${invalidIds.length > 3 ? '...' : ''}`);
+    return;
+  }
+
+  if (tipsIdList.length > 1000) {
+    ElMessage.warning('Exceeding the maximum download limit of 1000 IDs!');
+    return;
+  }
   try {
     loading.value = true
     const response = await axios.post(

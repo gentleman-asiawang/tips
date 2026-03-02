@@ -150,10 +150,11 @@ class DownloadData(APIView):
             return Response({'error': 'uuid does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         tips_id = request.data.get('tips_id')
-        if not tips_id:
-            return Response({'error': 'tips_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
-        if not tips_id or not isinstance(tips_id, list):
-            return Response({'error': 'tips_id must be a non-empty list'}, status=status.HTTP_404_NOT_FOUND)
+        if not isinstance(tips_id, list) or len(tips_id) == 0:
+            return Response({'error': 'tips_id must be a non-empty list'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(tips_id) > 1000:
+            return Response({'error': 'The number of protein IDs exceeds the limit of 1000.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 三种情况，pdb、sequence、both
         down_type = request.data.get('down_type', 'pdb') # 默认只下载pdb
