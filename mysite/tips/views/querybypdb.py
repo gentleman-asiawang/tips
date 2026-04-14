@@ -53,7 +53,7 @@ class QueryByPDB(APIView):
         UuidManager.add_entry(uuid, 'foldseek_tsv', out_file_path)
         tmp_path = '/tips_db/foldseek_db/tmp'
         foldseek_command = ['foldseek', 'easy-search', '--threads', '16', temp_pdb_path, foldseek_db_path,
-                            out_file_path, tmp_path, '-s', '9.5', '--max-seqs', '1000', '-e', '0.001',
+                            out_file_path, tmp_path, '-s', '9.5', '--max-seqs', '1000', '-e', '0.001', '-c', '0.5',
                             '--prefilter-mode', '1',
                             '--alignment-type', '2', '--cov-mode', '0', '--format-mode', '4', '--format-output',
                             'target,fident,evalue,bits,prob,lddt,qstart,qend,tstart,tend,tlen,qcov,tcov,alntmscore']
