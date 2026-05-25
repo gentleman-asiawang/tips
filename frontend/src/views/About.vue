@@ -27,14 +27,7 @@
 
     <div class="citation-container">
       <p class="title2">How to Cite:</p>
-      <p class="primary-citation">
-        Wu W., Cui C., Zhu Y., Chen J., Zhuang Q., Wang Y., Liu Z., Gao H., Ou G.-Z., Liu C., Tao M., Chen Y., Pan R.,
-        Zhang G.,
-        Cai H., Yang J., Chen X., Zhou X., Wang S., & Shen X.-X. 2026. Structural genomics sheds light on
-        protein functions and remote homologs across the insect tree of life.<em>Cell Research</em>.<a
-          style="color: #409eff;font-size: 22px;margin-left: 8px;cursor: pointer;vertical-align: baseline;"
-          href="javascript:void(0)" @click="!downloading && downloadPdf()">PDF</a>
-      </p>
+      <Article/>
       <p class="info-text">Please also cite the relevant paper if you use the corresponding option:</p>
 
       <p class="info-text"><b>Sequence-based search by MMseqs2 v15.6f452:</b> Steinegger M., & Söding J. 2017.
@@ -80,29 +73,9 @@
   </el-scrollbar>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 
-const downloading = ref(false);
-
-const downloadPdf = async () => {
-  if (downloading.value) return;
-  downloading.value = true;
-  try {
-    const url = 'https://tips.shenxlab.com/tips_data/2026_Wu_etal_Cell_Res.pdf';
-    const response = await fetch(url, { mode: 'cors' });
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = '2026_Wu_etal_Cell_Res.pdf';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(blobUrl);
-  } finally {
-    downloading.value = false;
-  }
-};
+import Article from '@/components/Article.vue';
 
 onMounted(() => {
   const container = document.getElementById('map-container');
